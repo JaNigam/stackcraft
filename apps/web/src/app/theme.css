@@ -1,0 +1,207 @@
+/*
+ * Stackcraft locked look ("A + D", docs/STYLE-GUIDE.md):
+ *   A = sticker-doodle characters: thick ink outlines, pastel fills, cream cards, googly eyes.
+ *   D = interactive playgrounds: buttons, sliders, live readouts, short bouncy drops.
+ *   Chalkboard panels only for exact internals (fields, arrays, bit maths).
+ * Stickers are physical objects: they keep their pastel fill and ink outline in both themes.
+ */
+:root {
+  /* palette (fixed) */
+  --ink: #2c2c2a;
+  --pink: #f4c0d1;
+  --lavender: #cecbf6;
+  --mint: #9fe1cb;
+  --amber: #fac775;
+  --sky: #b5d8f5;
+  --coral: #f5a08c;
+  --cream: #fff8ec;
+  --board: #1f3a30;
+  --board-edge: #5b4636;
+  --chalk: #f1efe8;
+  --chalk-yellow: #f6e27a;
+  --chalk-pink: #f4c0d1;
+
+  /* semantic tokens (light) */
+  --bg: #f7f1e3;
+  --bg-dots: rgba(44, 44, 42, 0.07);
+  --surface: #fff8ec;
+  --surface-2: #fdf0d8;
+  --text: #2c2c2a;
+  --text-muted: #6b665c;
+  --outline: #2c2c2a;
+  --sticker-edge: transparent;
+  --shadow: 4px 4px 0 #2c2c2a;
+  --shadow-sm: 2px 2px 0 #2c2c2a;
+  --ok: #2f8f6b;
+  --ok-bg: #d8f3e8;
+  --bad: #c0443a;
+  --bad-bg: #fbe0dc;
+  --focus: #6a5fe0;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --stroke: 2.75px;
+  --font-display: 'Fredoka Variable', 'Fredoka', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Nunito Variable', 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #171714;
+    --bg-dots: rgba(241, 239, 232, 0.05);
+    --surface: #23221e;
+    --surface-2: #2c2a25;
+    --text: #f1efe8;
+    --text-muted: #b2ac9f;
+    --outline: #f1efe8;
+    --sticker-edge: #f1efe8;
+    --shadow: 4px 4px 0 #000;
+    --shadow-sm: 2px 2px 0 #000;
+    --ok: #6fd3a8;
+    --ok-bg: #1f3a30;
+    --bad: #f39a8f;
+    --bad-bg: #42231f;
+    --focus: #a9a2ff;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #171714;
+  --bg-dots: rgba(241, 239, 232, 0.05);
+  --surface: #23221e;
+  --surface-2: #2c2a25;
+  --text: #f1efe8;
+  --text-muted: #b2ac9f;
+  --outline: #f1efe8;
+  --sticker-edge: #f1efe8;
+  --shadow: 4px 4px 0 #000;
+  --shadow-sm: 2px 2px 0 #000;
+  --ok: #6fd3a8;
+  --ok-bg: #1f3a30;
+  --bad: #f39a8f;
+  --bad-bg: #42231f;
+  --focus: #a9a2ff;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--bg-dots) 1.2px, transparent 1.2px);
+  background-size: 18px 18px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--surface-2);
+  border: 1.5px solid color-mix(in srgb, var(--outline) 25%, transparent);
+  padding: 0.05em 0.35em;
+  border-radius: 6px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border: var(--stroke) solid var(--outline);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+  font-size: 0.93rem;
+}
+
+th,
+td {
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--outline) 20%, transparent);
+}
+
+th {
+  font-family: var(--font-display);
+  font-weight: 600;
+  background: var(--lavender);
+  color: var(--ink);
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Code must show exactly what Java prints: no ligatures turning "->" or "!=" into glyphs. */
+code,
+pre,
+kbd,
+samp,
+.k-board,
+.k-pill,
+.ui-input {
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
+}
