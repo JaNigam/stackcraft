@@ -18,6 +18,8 @@ codebase itself as their case study, so it is built like a real product: SOLID i
    (H2 in dev)       no DB, no secrets, hard limits
 ```
 
+**Full docs: [docs/README.md](docs/README.md)** (getting started, build and test, architecture chapters, authoring).
+
 Decisions: [ADR 0001 three services](docs/adr/0001-monorepo-three-services.md) ·
 [ADR 0002 content as code](docs/adr/0002-content-as-code.md) ·
 [ADR 0003 runner isolation](docs/adr/0003-runner-isolation.md) ·
