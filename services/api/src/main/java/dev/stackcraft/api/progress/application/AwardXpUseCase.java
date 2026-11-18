@@ -7,6 +7,7 @@ import dev.stackcraft.api.progress.port.ProgressReader;
 import dev.stackcraft.api.progress.port.ProgressWriter;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.regex.Pattern;
 
 /**
@@ -35,6 +36,11 @@ public class AwardXpUseCase {
     }
 
     public XpAward award(XpClaim claim) {
+        return award(claim, clock.instant());
+    }
+
+    /** Same rules, with the time the attempt really happened (guest imports keep their original timestamps). */
+    public XpAward award(XpClaim claim, Instant occurredAt) {
         if (claim.attemptId() == null || !ATTEMPT_ID.matcher(claim.attemptId()).matches()) {
             throw new IllegalArgumentException("attemptId must be 8-64 characters of letters, digits or '-'");
         }
@@ -48,7 +54,7 @@ public class AwardXpUseCase {
         int awarded = Math.max(0, earned - alreadyPaid);
 
         XpEvent event = new XpEvent(claim.attemptId(), claim.learnerId(), claim.kind(), claim.chapterId(),
-                claim.itemId(), awarded, claim.score(), clock.instant());
+                claim.itemId(), awarded, claim.score(), occurredAt);
         try {
             writer.append(event);
         } catch (DuplicateAttemptException race) {

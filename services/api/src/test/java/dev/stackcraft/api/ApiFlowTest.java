@@ -1,5 +1,7 @@
 package dev.stackcraft.api;
 
+import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +14,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 /**
  * The whole api with real adapters: fixture content from files, Flyway-migrated H2, and a runner URL that points
@@ -32,8 +35,25 @@ class ApiFlowTest {
         return UUID.randomUUID().toString();
     }
 
+    /** Every test runs as a freshly registered learner, the way the browser does: access cookie + CSRF token. */
+    private Cookie access;
+
+    @BeforeEach
+    void signUp() {
+        var res = mvc.post().uri("/api/v1/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"flow-" + id() + "@example.com\",\"password\":\"correct horse battery\",\"displayName\":\"Flow Tester\"}")
+                .exchange();
+        assertThat(res).hasStatus(201);
+        access = res.getResponse().getCookie("sc_access");
+        assertThat(access).isNotNull();
+    }
+
     private MockMvcTester.MockMvcRequestBuilder post(String uri, String json) {
-        return mvc.post().uri(uri).contentType(MediaType.APPLICATION_JSON).content(json);
+        return mvc.post().uri(uri).cookie(access).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json);
+    }
+
+    private MockMvcTester.MockMvcRequestBuilder get(String uri) {
+        return mvc.get().uri(uri).cookie(access);
     }
 
     @Test
@@ -80,28 +100,28 @@ class ApiFlowTest {
         assertThat(post(CH + "/teasers/t1/commits", "{\"attemptId\":\"" + id() + "\",\"choice\":0}"))
                 .hasStatusOk().bodyJson().extractingPath("$.reveal").asString().contains("HashMap");
 
-        assertThat(mvc.get().uri("/api/v1/trap-board")).hasStatusOk().bodyJson()
+        assertThat(get("/api/v1/trap-board")).hasStatusOk().bodyJson()
                 .extractingPath("$[*].itemId").asArray().containsExactlyInAnyOrder("i1", "t1");
 
         assertThat(post(CH + "/questions/i1/answers", "{\"attemptId\":\"" + id() + "\",\"text\":\"33\\n\"}"))
                 .hasStatusOk().bodyJson().extractingPath("$.xpAwarded").isEqualTo(4);
-        assertThat(mvc.get().uri("/api/v1/trap-board")).hasStatusOk().bodyJson()
+        assertThat(get("/api/v1/trap-board")).hasStatusOk().bodyJson()
                 .extractingPath("$[*].itemId").asArray().containsExactly("t1");
     }
 
     @Test
     void completingAChapterUnlocksItsFlashcards() {
-        assertThat(mvc.get().uri("/api/v1/flashcards/due")).hasStatusOk().bodyJson().extractingPath("$").asArray().isEmpty();
+        assertThat(get("/api/v1/flashcards/due")).hasStatusOk().bodyJson().extractingPath("$").asArray().isEmpty();
 
         assertThat(post(CH + "/completion", "{\"attemptId\":\"" + id() + "\"}")).hasStatusOk().bodyJson()
                 .extractingPath("$.progress.completedChapters[0]").isEqualTo("demo.u00.l01");
 
-        assertThat(mvc.get().uri("/api/v1/flashcards/due")).hasStatusOk().bodyJson()
+        assertThat(get("/api/v1/flashcards/due")).hasStatusOk().bodyJson()
                 .extractingPath("$[0].key").isEqualTo("demo.u00.l01/f1");
 
         String review = "{\"attemptId\":\"" + id() + "\",\"cardKey\":\"demo.u00.l01/f1\",\"remembered\":true}";
         assertThat(post("/api/v1/flashcards/reviews", review)).hasStatusOk().bodyJson().extractingPath("$.box").isEqualTo(2);
-        assertThat(mvc.get().uri("/api/v1/flashcards/due")).hasStatusOk().bodyJson().extractingPath("$").asArray().isEmpty();
+        assertThat(get("/api/v1/flashcards/due")).hasStatusOk().bodyJson().extractingPath("$").asArray().isEmpty();
     }
 
     @Test

@@ -40,6 +40,10 @@ class ArchitectureTest {
             .should().resideInAPackage("..adapter..");
 
     @ArchTest
+    static final ArchRule onlyTheSecurityAdapterTouchesSpringSecurity = noClasses().that().resideOutsideOfPackage("..identity.adapter.security..")
+            .should().dependOnClassesThat().resideInAnyPackage("org.springframework.security..", "com.nimbusds..");
+
+    @ArchTest
     static final ArchRule gradersOnlyGrade = noClasses().that().resideInAPackage("..quiz.grading..")
             .should().dependOnClassesThat().resideInAnyPackage("..progress..", "..content..", "..execution..");
 }
