@@ -45,47 +45,21 @@
   --font-body: 'Nunito Variable', 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
 
+  /* tokens every theme sets (see src/app/themes/) */
+  --callout-bg: #fff8ec;
+  --code-bg: #fffdf7;
+  --code-text: #2c2c2a;
+  --tk-keyword: #8a3ffc;
+  --tk-type: #0b6e99;
+  --tk-string: #b5361f;
+  --tk-number: #a35c00;
+  --tk-comment: #7b7668;
+  --tk-annotation: #2f8f6b;
+  --highlight: #f4c0d1;
+  --arrow-filter: none;
+  --header-bg: rgba(247, 241, 227, 0.92);
+
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --bg: #171714;
-    --bg-dots: rgba(241, 239, 232, 0.05);
-    --surface: #23221e;
-    --surface-2: #2c2a25;
-    --text: #f1efe8;
-    --text-muted: #b2ac9f;
-    --outline: #f1efe8;
-    --sticker-edge: #f1efe8;
-    --shadow: 4px 4px 0 #000;
-    --shadow-sm: 2px 2px 0 #000;
-    --ok: #6fd3a8;
-    --ok-bg: #1f3a30;
-    --bad: #f39a8f;
-    --bad-bg: #42231f;
-    --focus: #a9a2ff;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme='dark'] {
-  --bg: #171714;
-  --bg-dots: rgba(241, 239, 232, 0.05);
-  --surface: #23221e;
-  --surface-2: #2c2a25;
-  --text: #f1efe8;
-  --text-muted: #b2ac9f;
-  --outline: #f1efe8;
-  --sticker-edge: #f1efe8;
-  --shadow: 4px 4px 0 #000;
-  --shadow-sm: 2px 2px 0 #000;
-  --ok: #6fd3a8;
-  --ok-bg: #1f3a30;
-  --bad: #f39a8f;
-  --bad-bg: #42231f;
-  --focus: #a9a2ff;
-  color-scheme: dark;
 }
 
 *,

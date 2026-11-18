@@ -56,6 +56,13 @@ only says what the learner answered; the container adds the `attemptId`.
 `HierarchyTree`, and `javaHash.ts` (Java's hash maths, tested against JVM output). Showcase: `/kit`. Rules:
 [STYLE-GUIDE](../STYLE-GUIDE.md).
 
+## Themes
+
+`app/themes/*.theme.ts` are data files (id, label, light/dark, a value for every token in `THEME_TOKENS`).
+`themes/registry.ts` finds them with `import.meta.glob`; `app/theme.ts` writes the chosen theme's tokens as CSS
+custom properties on `<html>` and sets `data-scheme`; `ThemeMenu` lists the registry. Adding a theme is one file;
+`themes.test.ts` checks completeness and contrast.
+
 ## Layout
 
 `Split` / `Explain` / `Panel`: text left, sticky interactive panel right, stacked under 1024 px. Page width up to

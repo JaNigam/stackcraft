@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ServicesProvider, type Services } from './services';
-import { isDark, setTheme } from './theme';
+import { ThemeMenu } from './ThemeMenu';
 import { ProgressHeader } from '@/features/progress/ProgressHeader';
 import { HomePage } from '@/pages/HomePage';
 import { SeriesPage } from '@/pages/SeriesPage';
@@ -10,23 +10,6 @@ import { ChapterPage } from '@/pages/ChapterPage';
 import { TrapBoardPage } from '@/pages/TrapBoardPage';
 import { KitPage } from '@/pages/KitPage';
 import { Character } from '@/shared/kit';
-
-function ThemeToggle() {
-  const [dark, setDark] = useState(isDark());
-  return (
-    <button
-      type="button"
-      className="ui-btn ui-btn--ghost app-theme"
-      aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-      onClick={() => {
-        setTheme(dark ? 'light' : 'dark');
-        setDark(!dark);
-      }}
-    >
-      {dark ? '☀' : '☾'}
-    </button>
-  );
-}
 
 function Shell({ mode }: { mode: Services['mode'] }) {
   return (
@@ -45,7 +28,7 @@ function Shell({ mode }: { mode: Services['mode'] }) {
             <NavLink to="/traps">Trap Board</NavLink>
             <NavLink to="/kit">Kit</NavLink>
           </nav>
-          <ThemeToggle />
+          <ThemeMenu />
         </div>
         <div className="app-header__row app-header__row--progress">
           <ProgressHeader />

@@ -14,18 +14,10 @@
   min-height: 40px;
 }
 
-:root[data-theme='dark'] .ui-btn--default,
-:root[data-theme='dark'] .ui-btn--ghost {
+.ui-btn--default,
+.ui-btn--ghost {
   color: var(--text);
   border-color: var(--outline);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .ui-btn--default,
-  :root:not([data-theme='light']) .ui-btn--ghost {
-    color: var(--text);
-    border-color: var(--outline);
-  }
 }
 
 .ui-btn:hover:not(:disabled) {
@@ -129,7 +121,8 @@
 
 .ui-callout__body {
   padding: 0.55rem 0.85rem;
-  background: var(--cream);
+  background: var(--callout-bg);
+  color: var(--text);
   font-size: 0.96rem;
 }
 
@@ -189,8 +182,8 @@
   padding: 0.8rem 0.95rem;
   border: var(--stroke) solid var(--outline);
   border-radius: var(--radius-sm);
-  background: #fffdf7;
-  color: #2c2c2a;
+  background: var(--code-bg);
+  color: var(--code-text);
 }
 
 .ui-code pre code {
@@ -214,30 +207,14 @@
   border-color: var(--ink);
 }
 
-.tk-k { color: #8a3ffc; font-weight: 600; }
-.tk-t { color: #0b6e99; }
-.tk-s { color: #b5361f; }
-.tk-n { color: #a35c00; }
-.tk-c { color: #7b7668; font-style: italic; }
-.tk-a { color: #2f8f6b; }
+.tk-k { color: var(--tk-keyword); font-weight: 600; }
+.tk-t { color: var(--tk-type); }
+.tk-s { color: var(--tk-string); }
+.tk-n { color: var(--tk-number); }
+.tk-c { color: var(--tk-comment); font-style: italic; }
+.tk-a { color: var(--tk-annotation); }
 
-:root[data-theme='dark'] .ui-code pre { background: #1d1c19; color: #f1efe8; }
-:root[data-theme='dark'] .tk-k { color: #c8a2ff; }
-:root[data-theme='dark'] .tk-t { color: #7fd1f5; }
-:root[data-theme='dark'] .tk-s { color: #ffa28f; }
-:root[data-theme='dark'] .tk-n { color: #fac775; }
-:root[data-theme='dark'] .tk-c { color: #9a9486; }
-:root[data-theme='dark'] .tk-a { color: #9fe1cb; }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .ui-code pre { background: #1d1c19; color: #f1efe8; }
-  :root:not([data-theme='light']) .tk-k { color: #c8a2ff; }
-  :root:not([data-theme='light']) .tk-t { color: #7fd1f5; }
-  :root:not([data-theme='light']) .tk-s { color: #ffa28f; }
-  :root:not([data-theme='light']) .tk-n { color: #fac775; }
-  :root:not([data-theme='light']) .tk-c { color: #9a9486; }
-  :root:not([data-theme='light']) .tk-a { color: #9fe1cb; }
-}
 
 /* ---------- Misc ---------- */
 .ui-spinner {

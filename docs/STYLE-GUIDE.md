@@ -17,7 +17,18 @@ Live showcase: run the web app and open `/kit`. Code: `apps/web/src/shared/kit/`
 - Fonts (self-hosted): Fredoka (display), Nunito (body), JetBrains Mono (code).
 - Family colours are fixed: List = mint, Set = lavender, Map = amber, Queue = sky, objects/blobs = pink.
 - Characters have googly eyes and a mood: `happy`, `smug`, `surprised`, `sad`, `nope`, `sleepy`.
-- Dark mode: page and cards go dark; **stickers keep their pastel fill and ink outline** and gain a light die-cut edge.
+- Stickers keep their pastel fill and ink outline in every theme, and gain a soft die-cut edge on dark pages.
+
+## Themes (plug and play)
+Themes live in `apps/web/src/app/themes/`, one `<id>.theme.ts` file each. Built in: **Cream paper** (light),
+**Cocoa night** (default dark), **Midnight ink**, **Forest chalk**, **Plum dusk**. Pick one from the header menu, or
+"System" to follow the OS (light → Cream paper, dark → Cocoa night).
+
+To add a theme, copy any theme file, change the id, label and colours, done: the registry discovers it and the menu
+lists it. `themes.test.ts` checks that it defines every token, that text contrast meets WCAG AA (7:1 body, 4.5:1
+muted), and that dark-theme outlines stay soft (no pure-white lines: that is what made the first dark mode feel like
+high-contrast mode). The CSS never hard-codes a theme: it only reads tokens (`--bg`, `--surface`, `--outline`,
+`--code-bg`, `--tk-keyword`, ...), listed in `themes/types.ts`.
 
 ## Motion
 - Short and bouncy: drops are springs (~0.3 s), hops are 0.45 s. Nothing loops except the machine gear.
