@@ -1,5 +1,9 @@
 {/* Lesson 0.1 theory. Components come from the web app's MDX map (apps/web/src/features/theory/mdxComponents.tsx).
+    Layout: <Split> puts the explanation on the left and the interactive panel (sticky) on the right.
     Every number below is quoted from code/CollectionsTour.out, which verify-content re-checks against a real run. */}
+
+<Split ratio="wide-text">
+<Explain>
 
 <Hook>
 "Walk me through the Java Collections Framework. When would you pick each one?" This is the opener of almost every
@@ -10,7 +14,15 @@ map is fuzzy, every follow-up feels like a new question. If it is sharp, they al
 ## The picture to remember: a kitchen
 
 Think of a busy restaurant kitchen. Different stations hold food in different ways, because each job needs a
-different promise.
+different promise. That is the whole framework in four promises:
+
+- **List** promises *order and positions*. Duplicates allowed.
+- **Set** promises *no duplicates*. Order depends on which kind of set.
+- **Queue / Deque** promises *an order of taking things out*: oldest first, newest first, or smallest first.
+- **Map** promises *one value per key*. It is a lookup table, not a bag of items.
+
+</Explain>
+<Panel>
 
 <Scene label="The kitchen crew">
   <Actor kind="list" label="ArrayList" says="The order rail. Tickets in arrival order, numbered 0, 1, 2. Two identical orders? Both stay." />
@@ -19,18 +31,15 @@ different promise.
   <Actor kind="queue" label="ArrayDeque" says="The plate stack and the pass. Take from the top, or serve the oldest first." />
 </Scene>
 
-That is the whole framework in four promises:
+</Panel>
+</Split>
 
-- **List** promises *order and positions*. Duplicates allowed.
-- **Set** promises *no duplicates*. Order depends on which kind of set.
-- **Queue / Deque** promises *an order of taking things out*: oldest first, newest first, or smallest first.
-- **Map** promises *one value per key*. It is a lookup table, not a bag of items.
+<Split>
+<Explain>
 
 ## The family tree
 
-Every collection class sits under two roots. Tap a sticker to see its one-line fact.
-
-<CollectionsFamilyTree />
+Every collection class sits under two roots. Tap a sticker on the right to see its one-line fact.
 
 Three things interviewers check here:
 
@@ -47,53 +56,84 @@ Three things interviewers check here:
 `map.entrySet()` instead.
 </Callout>
 
+</Explain>
+<Panel>
+
+<CollectionsFamilyTree />
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
 ## Watch the promises in action
 
-Same `add()` calls go into four collections at once. Add `apple` twice and watch the HashSet refuse it. Then press
-**Load the tour** to replay exactly what the code below does.
-
-<CollectionsPlayground />
+The same `add()` call goes into four collections at once. Add `apple` twice and watch the HashSet refuse it. Then
+press **Load the tour** to replay exactly what the code further down does.
 
 Notice the HashSet's order: `[banana, apple, kiwi, mango]`. It is not insertion order and not alphabetical. It is
 **bucket order**: banana sits in bucket 0, apple in 1, kiwi in 2, mango in 15. Which bucket a key lands in comes
 from its hash code, so for a HashSet "order" is an accident of maths, and the Javadoc says you must never rely on it.
 
+The other three tell their own story:
+
+- **ArrayList** keeps both `apple`s, each with its own index.
+- **LinkedHashSet** drops the duplicate but remembers who arrived first.
+- **TreeSet** drops the duplicate and keeps everyone sorted.
+
+</Explain>
+<Panel>
+
+<CollectionsPlayground />
+
+</Panel>
+</Split>
+
+<Split>
+<Explain>
+
 ## How a HashSet picks the bucket (exact internals)
 
 A `HashSet` is a `HashMap` in disguise: your element is the key and every value is one shared dummy object. The map
-keeps an array called `table`. To place a key it runs three steps, shown here with the real numbers for `"apple"`.
-Change the key or the table length and the board recomputes with Java's own algorithm.
+keeps an array called `table`. To place a key it runs three steps, shown on the board with the real numbers for
+`"apple"`. Change the key or the table length and the board recomputes with Java's own algorithm.
+
+1. **hashCode**: `"apple".hashCode()` is 93029210.
+2. **spread**: XOR the high 16 bits into the low 16 (`h ^ (h >>> 16)`).
+3. **mask**: `(n - 1) & hash` keeps the low bits. In a 16-slot table, `"apple"` lands in **bucket 1**.
+
+Step 2 matters because step 3 only looks at the low bits: mixing the high half in stops keys that differ only in
+their high bits from piling into one bucket.
+
+Two different keys in the same bucket (here `apple` and `cherry` both land in bucket 1) is a **collision**: they
+form a short chain through each node's `next` field. That is the doorway to Lesson 0.3.
+
+</Explain>
+<Panel>
 
 <HashMathBoard initial="apple" />
 
-So `"apple".hashCode()` is 93029210 and, in a 16-slot table, it lands in **bucket 1**. Step 2 matters because step 3
-only looks at the low bits: mixing the high half in stops keys that differ only in their high bits from piling into
-one bucket. Two different keys in the same bucket (here `apple` and `cherry` both land in bucket 1) is a
-**collision**: they form a short chain through each node's `next` field. That is the doorway to Lesson 0.3.
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
 
 ## Run it: the collections tour
 
-Here is the program the playground replays. Run it on the live JVM, or edit it and break things on purpose.
+On the right is the program the playground replays. Run it on the live JVM. Below, it is broken down piece by piece
+with the exact lines it prints.
 
-<RunnableCode file="CollectionsTour.java" />
-
-### Piece by piece
-
-**1. List keeps everything, in order.**
-
-```java
-List<String> list = new ArrayList<>();
-list.add("mango"); list.add("kiwi"); list.add("apple"); list.add("banana"); list.add("apple");
-```
+**1. List keeps everything, in order.** Both `apple`s stay, and `get(2)` jumps straight to slot 2. That jump is
+O(1) because an `ArrayList` is a plain array underneath.
 
 ```output
 1 ArrayList      [mango, kiwi, apple, banana, apple] get(2)=apple
 ```
 
-Both `apple`s stay, and `get(2)` jumps straight to slot 2. That jump is O(1) because an `ArrayList` is a plain array
-underneath.
-
-**2. Three sets, three orders.**
+**2. Three sets, three orders.** Same five words in, four unique words out, in three different orders: bucket
+order, insertion order, sorted order. This is the best 10-second answer to "HashSet vs LinkedHashSet vs TreeSet".
 
 ```output
 2 HashSet        [banana, apple, kiwi, mango] size=4
@@ -101,22 +141,14 @@ underneath.
 4 TreeSet        [apple, banana, kiwi, mango]
 ```
 
-Same five words in, four unique words out, in three different orders: bucket order, insertion order, sorted order.
-That one line of output is the best 10-second answer to "HashSet vs LinkedHashSet vs TreeSet".
-
 **3. `add` tells you whether anything changed.**
 
 ```output
 5 add("apple") again -> false
 ```
 
-**4. `put` hands back the old value.**
-
-```java
-Map<String, Integer> stock = new HashMap<>();
-stock.put("apple", 10);   // returns null: nothing was there
-stock.put("apple", 25);   // returns 10: the value it replaced
-```
+**4. `put` hands back the old value.** The first `put` returns `null` (nothing was there), the second returns `10`,
+the value it replaced.
 
 ```output
 6 put first      -> null
@@ -130,8 +162,7 @@ stock.put("apple", 25);   // returns 10: the value it replaced
 `getOrDefault(key, 0)`, when the difference matters.
 </Callout>
 
-**5. One class, two disciplines.** `ArrayDeque` is a queue when you use `offer`/`poll` and a stack when you use
-`push`/`pop`.
+**5. One class, two disciplines.** `ArrayDeque` is a queue with `offer`/`poll` and a stack with `push`/`pop`.
 
 ```output
 11 queue poll()  -> first
@@ -144,27 +175,52 @@ stock.put("apple", 25);   // returns 10: the value it replaced
 13 PriorityQueue [1, 2, 4, 5, 3] peek=1
 ```
 
-**7. Read-only lists bite.**
+**7. Read-only lists bite.** `List.of` is fully immutable. `Arrays.asList` is a fixed-size *view* of an array:
+`set` works, `add` does not.
 
 ```output
 14 List.of(...).add -> UnsupportedOperationException
 15 Arrays.asList [z, y] add -> UnsupportedOperationException
 ```
 
-`List.of` is fully immutable. `Arrays.asList` is a fixed-size *view* of an array: `set` works, `add` does not.
+</Explain>
+<Panel>
+
+<RunnableCode file="CollectionsTour.java" />
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
 
 ## Break it (predict first, then run)
 
-Edit the code above and predict before you press Run:
+The editor on the right is already open. Make one change, say your prediction out loud, then press **Run**.
+**Reset** puts the original back.
 
 1. Change the `TreeSet` line to `new TreeSet<>(Comparator.reverseOrder())` and add the fruits. What prints?
 2. Add `list.remove("apple")` after step 1. Which apple goes, the first or the last?
 3. Replace `HashSet` with `LinkedHashSet` in step 2 and add `"apple"` again at the end. Does `apple` move to the end?
 4. Put `null` into the `HashMap` as a key, then into a `TreeMap`. Which one complains, and why?
 
-## Choosing, in 10 seconds
+<Callout kind="why">
+Breaking code on purpose is where the model in your head gets corrected. A wrong prediction you checked is worth
+more than ten right answers you read.
+</Callout>
 
-<CollectionPicker />
+</Explain>
+<Panel>
+
+<RunnableCode file="CollectionsTour.java" title="Your sandbox: CollectionsTour.java" startEditing />
+
+</Panel>
+</Split>
+
+<Split ratio="wide-text">
+<Explain>
+
+## Choosing, in 10 seconds
 
 | Need | Pick | Main cost | Why not the others |
 |---|---|---|---|
@@ -185,6 +241,14 @@ then engine, then cost.
 Spring nudge: when a bean asks for `List<Grader> graders`, Spring injects every bean of that type, in order. Stackcraft
 uses exactly that to find its question graders, so adding a question type never edits existing code.
 </Callout>
+
+</Explain>
+<Panel>
+
+<CollectionPicker />
+
+</Panel>
+</Split>
 
 <CheatCard title="Cheat card: the Collections map">
 

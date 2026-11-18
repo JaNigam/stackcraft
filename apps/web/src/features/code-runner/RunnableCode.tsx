@@ -20,12 +20,12 @@ const statusTone = { OK: 'ok', COMPILE_ERROR: 'bad', RUNTIME_ERROR: 'bad', TIMEO
  * A chapter code file you can read, edit and run on the live runner. If the runner is down, busy or the site is
  * offline, it shows the verified .out instead (and says so). The .out is checked against a real run in CI.
  */
-export function RunnableCode({ file, title }: { file: string; title?: string }) {
+export function RunnableCode({ file, title, startEditing = false }: { file: string; title?: string; startEditing?: boolean }) {
   const { chapterId } = useChapterContext();
   const code = codeFile(chapterId, file);
   const runner = useCodeRunner();
   const [source, setSource] = useState(code?.source ?? '');
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(startEditing);
   const [view, setView] = useState<View>({ state: 'idle' });
 
   if (!code) return <div className="ui-error">Missing code file {file}</div>;

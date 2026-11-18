@@ -36,7 +36,7 @@ function Pill({ word, isNew, rejected }: { word: string; isNew?: boolean; reject
 
 function Column({ title, kind, mood, bump, printed, children }: { title: string; kind: 'list' | 'set' | 'tree'; mood: Mood; bump: number; printed: string; children: React.ReactNode }) {
   return (
-    <div className="cp-col">
+    <div className={`cp-col cp-col--${title.toLowerCase()}`}>
       <Character kind={kind === 'tree' ? 'tree' : kind} mood={mood} label={title} size={76} bump={bump} />
       <div className="cp-col__body">{children}</div>
       <code className="cp-col__print">{printed}</code>

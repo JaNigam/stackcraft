@@ -3,6 +3,7 @@ import type { MDXComponents } from 'mdx/types';
 import * as kit from '@/shared/kit';
 import { Badge, Callout } from '@/shared/ui';
 import { CodeBlock, OutputBlock } from '@/shared/ui/CodeBlock';
+import { Explain, Panel, Split } from '@/shared/ui/Split';
 import { RunnableCode } from '@/features/code-runner/RunnableCode';
 import { CollectionsPlayground } from './widgets/CollectionsPlayground';
 import { HashMathBoard } from './widgets/HashMathBoard';
@@ -47,6 +48,9 @@ export const mdxComponents: MDXComponents = {
   ),
   Callout,
   Badge,
+  Split,
+  Explain,
+  Panel,
   CheatCard,
   Hook,
   RunnableCode,

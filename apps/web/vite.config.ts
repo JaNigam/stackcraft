@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import mdx from '@mdx-js/rollup';
+import remarkGfm from 'remark-gfm';
 import path from 'node:path';
 
 const repoRoot = path.resolve(__dirname, '../..');
@@ -10,7 +11,8 @@ const repoRoot = path.resolve(__dirname, '../..');
 // time and bundles chapter YAML + verified code output, so the site also works as a static, offline-capable build.
 export default defineConfig({
   plugins: [
-    { enforce: 'pre', ...mdx({ providerImportSource: '@mdx-js/react' }) },
+    // remark-gfm: GitHub-style tables, task lists and strikethrough in theory.mdx.
+    { enforce: 'pre', ...mdx({ providerImportSource: '@mdx-js/react', remarkPlugins: [remarkGfm] }) },
     react({ include: /\.(mdx|jsx|tsx|ts|js)$/ }),
   ],
   resolve: {

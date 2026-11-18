@@ -6,7 +6,7 @@ export default function JavaEditor({ value, onChange }: { value: string; onChang
   const dark = document.documentElement.dataset.theme === 'dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
   return (
     <div className="cr__editor">
-      <CodeMirror value={value} onChange={onChange} extensions={[java()]} theme={dark ? 'dark' : 'light'} basicSetup={{ foldGutter: false }} aria-label="Java editor" />
+      <CodeMirror value={value} onChange={onChange} extensions={[java()]} theme={dark ? 'dark' : 'light'} basicSetup={{ foldGutter: false }} maxHeight="58vh" aria-label="Java editor" />
     </div>
   );
 }
