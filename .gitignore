@@ -31,3 +31,7 @@ npm-debug.log*
 # Playwright
 test-results/
 playwright-report/
+
+# local overrides
+*.local
+services/api/data/

@@ -1,0 +1,79 @@
+# Brain teasers: commit to an answer BEFORE the reveal. A wrong commit goes to your Trap Board.
+# Every reveal quotes CollectionsTour.out (verified by running the code).
+teasers:
+  - id: t1
+    prompt: You add "apple" to a HashSet that already contains "apple". What does the second add() return?
+    code: |
+      Set<String> set = new HashSet<>(List.of("apple"));
+      System.out.println(set.add("apple"));
+    options:
+      - "true: it replaced the old one"
+      - "false: nothing changed"
+      - "It throws IllegalStateException"
+      - "It does not compile: add() is void"
+    answer: 1
+    reveal: |
+      `false`. `Set.add` returns *whether the set changed*. The set already had an equal element, so nothing
+      happens and you get `false` (line 5 of the tour: `add("apple") again -> false`). Useful trick: `if (!seen.add(x))`
+      detects a duplicate in one call.
+
+  - id: t2
+    prompt: map.put("apple", 10) and then map.put("apple", 25). What does the SECOND put return?
+    code: |
+      Map<String, Integer> stock = new HashMap<>();
+      stock.put("apple", 10);
+      System.out.println(stock.put("apple", 25));
+    options:
+      - "null"
+      - "25"
+      - "10"
+      - "It throws: duplicate key"
+    answer: 2
+    reveal: |
+      `10`, the **old** value. `put` replaces and hands back what was there (or `null` if nothing was). The tour shows
+      both: `put first -> null`, then `put again -> 10`. Interviewers love this because most people guess `25` or `null`.
+
+  - id: t3
+    prompt: Is java.util.Map a Collection?
+    options:
+      - "Yes: Map extends Collection"
+      - "No: Map is its own root interface"
+      - "Only HashMap is; TreeMap is not"
+      - "Yes, through Iterable"
+    answer: 1
+    reveal: |
+      **No.** `Map` is a separate root. A `Collection` is a bag of *elements*; a `Map` is a set of *key-to-value pairs*,
+      so `add(E)` makes no sense for it. You can still get Collection *views*: `keySet()`, `values()`, `entrySet()`.
+      The tour prints `Map is a Collection? false`.
+
+  - id: t4
+    prompt: You build a PriorityQueue from 5, 1, 4, 2, 3 and print it with System.out.println(pq). What appears?
+    code: |
+      PriorityQueue<Integer> pq = new PriorityQueue<>(List.of(5, 1, 4, 2, 3));
+      System.out.println(pq);
+    options:
+      - "[1, 2, 3, 4, 5]"
+      - "[5, 1, 4, 2, 3]"
+      - "[1, 2, 4, 5, 3]"
+      - "[5, 4, 3, 2, 1]"
+    answer: 2
+    reveal: |
+      `[1, 2, 4, 5, 3]`. A PriorityQueue is a **binary heap** stored in an array. Only the head is guaranteed to be the
+      smallest (`peek=1`); the rest is in heap order, not sorted. To get sorted output you must `poll()` repeatedly.
+
+  - id: t5
+    prompt: What happens when you call add() on the list returned by Arrays.asList("x", "y")?
+    code: |
+      List<String> view = Arrays.asList("x", "y");
+      view.set(0, "z");
+      view.add("w");
+    options:
+      - "It works: the list becomes [z, y, w]"
+      - "UnsupportedOperationException on add (set worked)"
+      - "UnsupportedOperationException on set already"
+      - "ArrayIndexOutOfBoundsException"
+    answer: 1
+    reveal: |
+      `Arrays.asList` returns a **fixed-size view over the array**. You may change slots (`set` works: `[z, y]`), but
+      not the size, so `add` throws `UnsupportedOperationException`. `List.of(...)` is stricter: fully immutable, even
+      `set` throws. Wrap in `new ArrayList<>(...)` when you need a growable list.

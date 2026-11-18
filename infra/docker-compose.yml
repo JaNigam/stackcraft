@@ -1,0 +1,60 @@
+# Whole stack locally:  docker compose -f infra/docker-compose.yml up --build   ->  http://localhost:8088
+# Networks: "edge" (web <-> api) and "internal" (api <-> runner, api <-> db). The runner is never published.
+name: stackcraft
+
+services:
+  web:
+    build: { context: .., dockerfile: infra/docker/web.Dockerfile }
+    ports: ["8088:80"]
+    depends_on:
+      api: { condition: service_healthy }
+    networks: [edge]
+
+  api:
+    build: { context: .., dockerfile: infra/docker/api.Dockerfile }
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://db:5432/stackcraft
+      DATABASE_USER: stackcraft
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-stackcraft-dev-only}
+      STACKCRAFT_RUNNER_URL: http://runner:8091
+      STACKCRAFT_WEB_ORIGINS: http://localhost:8088
+    depends_on:
+      db: { condition: service_healthy }
+      runner: { condition: service_healthy }
+    networks: [edge, internal]
+
+  runner:
+    build: { context: .., dockerfile: infra/docker/runner.Dockerfile }
+    environment:
+      RUNNER_MAX_CONCURRENT: 2
+      RUNNER_QUEUE_CAPACITY: 8
+    # Defence in depth until the per-run sandbox lands (ADR 0003).
+    read_only: true
+    tmpfs: ["/tmp:size=64m"]
+    pids_limit: 256
+    mem_limit: 1g
+    cpus: 2
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [internal]
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: stackcraft
+      POSTGRES_USER: stackcraft
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stackcraft-dev-only}
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stackcraft"]
+      interval: 5s
+      retries: 10
+    networks: [internal]
+
+networks:
+  edge: {}
+  internal: { internal: true }
+
+volumes:
+  dbdata: {}

@@ -1,0 +1,12 @@
+# Java Core: The Interviewer's Map. Units are listed in reading order; each lists its chapter folders.
+id: java-core
+title: Java Core
+tagline: The Interviewer's Map. Collections, memory, strings, OOP, streams, concurrency and the JVM, from first principles.
+units:
+  - id: u00
+    number: 0
+    dir: u00-rescue
+    title: The 90-minute rescue
+    summary: Collections map, ArrayList vs LinkedList, HashMap and HashSet, stack vs heap. Enough to stop the bleeding before the next interview.
+    chapters:
+      - l01-collections-map

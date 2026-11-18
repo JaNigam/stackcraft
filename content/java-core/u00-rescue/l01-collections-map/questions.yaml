@@ -1,0 +1,221 @@
+# Question bank. Tiers: warmup (auto-graded MCQ), interview (predict output + short answer), killer (problems).
+# Every `predict` question's `code` is compiled and run by scripts/verify-content.mjs and must print `expected`.
+questions:
+  # ---------- Warm-up ----------
+  - id: w1
+    tier: warmup
+    type: mcq
+    prompt: Which of these does NOT extend java.util.Collection?
+    options: [List, Set, Queue, Map]
+    answer: 3
+    explanation: Map is its own root interface (pairs, not elements). List, Set and Queue all extend Collection, which extends Iterable.
+
+  - id: w2
+    tier: warmup
+    type: mcq
+    prompt: You need unique customer IDs, kept sorted ascending. Which collection?
+    options: [HashSet, LinkedHashSet, TreeSet, ArrayList]
+    answer: 2
+    explanation: TreeSet is a sorted Set (red-black tree, O(log n) add/contains). HashSet has no order; LinkedHashSet keeps insertion order, not sorted order.
+
+  - id: w3
+    tier: warmup
+    type: mcq
+    prompt: Which keeps insertion order AND rejects duplicates?
+    options: [HashSet, LinkedHashSet, TreeSet, PriorityQueue]
+    answer: 1
+    explanation: LinkedHashSet is a HashSet plus a doubly linked list through the entries, so iteration follows insertion order. The tour prints [mango, kiwi, apple, banana].
+
+  - id: w4
+    tier: warmup
+    type: mcq
+    prompt: In modern Java, what should you use as a stack (LIFO)?
+    options: [java.util.Stack, ArrayDeque, Vector, TreeSet]
+    answer: 1
+    explanation: Stack extends Vector, so every call is synchronized and it exposes index access that breaks the stack idea. The Javadoc of Deque recommends ArrayDeque (push/pop/peek) instead.
+
+  - id: w5
+    tier: warmup
+    type: mcq
+    prompt: What does HashMap.get(key) return when the key is absent?
+    options: ["It throws NoSuchElementException", "null", "Optional.empty()", "0"]
+    answer: 1
+    explanation: get returns null for a missing key (the tour prints get("kiwi") -> null). Careful, null is also returned if the key maps to null; use containsKey or getOrDefault to tell them apart.
+
+  # ---------- Interview ----------
+  - id: i1
+    tier: interview
+    type: predict
+    prompt: Four collections, same five words. What are the four lines?
+    code: |
+      import java.util.*;
+
+      public class SetOrder {
+          public static void main(String[] args) {
+              List<String> words = List.of("mango", "kiwi", "apple", "banana", "kiwi");
+              System.out.println(new ArrayList<>(words));
+              System.out.println(new HashSet<>(words));
+              System.out.println(new LinkedHashSet<>(words));
+              System.out.println(new TreeSet<>(words));
+          }
+      }
+    expected: |
+      [mango, kiwi, apple, banana, kiwi]
+      [banana, apple, kiwi, mango]
+      [mango, kiwi, apple, banana]
+      [apple, banana, kiwi, mango]
+    explanation: |
+      ArrayList keeps everything in order, duplicates included. HashSet drops the second "kiwi" and iterates in
+      bucket order: banana is bucket 0, apple 1, kiwi 2, mango 15 (16 buckets). LinkedHashSet keeps insertion order.
+      TreeSet sorts. Note HashSet's order is an implementation detail: never rely on it.
+
+  - id: i2
+    tier: interview
+    type: predict
+    prompt: What does this print?
+    code: |
+      import java.util.*;
+
+      public class PutReturns {
+          public static void main(String[] args) {
+              Map<String, Integer> m = new HashMap<>();
+              System.out.println(m.put("a", 1));
+              System.out.println(m.put("a", 2));
+              System.out.println(m.size() + " " + m.get("a") + " " + m.get("b"));
+          }
+      }
+    expected: |
+      null
+      1
+      1 2 null
+    explanation: put returns the previous value (null the first time, then 1). Keys are unique, so size stays 1 and the value is now 2. A missing key gives null.
+
+  - id: i3
+    tier: interview
+    type: predict
+    prompt: An ArrayDeque used from both ends. What does it print?
+    code: |
+      import java.util.*;
+
+      public class DequeBothEnds {
+          public static void main(String[] args) {
+              Deque<Integer> d = new ArrayDeque<>();
+              d.push(1);
+              d.push(2);
+              d.offer(3);
+              System.out.println(d);
+              System.out.println(d.pop() + " " + d.pollLast() + " " + d);
+          }
+      }
+    expected: |
+      [2, 1, 3]
+      2 3 [1]
+    explanation: push adds at the FRONT (stack style), offer adds at the BACK (queue style). So the deque is [2, 1, 3]. pop takes from the front (2), pollLast from the back (3), leaving [1].
+
+  - id: i4
+    tier: interview
+    type: short
+    prompt: "The interviewer says: walk me through the Java Collections Framework. Answer in about 60 seconds."
+    modelAnswer: |
+      There are two roots. `Collection` (which extends `Iterable`) holds single elements and splits into three
+      families: `List` (ordered, duplicates allowed, index access: ArrayList, LinkedList), `Set` (no duplicates:
+      HashSet with no order, LinkedHashSet with insertion order, TreeSet sorted) and `Queue`/`Deque` (ordered for
+      processing: ArrayDeque for FIFO or LIFO, PriorityQueue for smallest-first). `Map` is the second root and holds
+      key-to-value pairs: HashMap (no order, O(1) average), LinkedHashMap (insertion or access order, the basis of an
+      LRU cache) and TreeMap (sorted keys, O(log n)). The Hash* classes rely on `hashCode` and `equals`; the Tree*
+      classes rely on `compareTo` or a `Comparator`. Concurrent versions live in `java.util.concurrent`.
+    keyPoints:
+      - Two roots, Collection and Map; Map is not a Collection
+      - List, Set, Queue/Deque families with one main implementation each
+      - Order guarantees differ - none, insertion, sorted
+      - Hash* needs hashCode/equals, Tree* needs Comparable/Comparator
+      - Mention concurrent collections exist (bonus)
+
+  - id: i5
+    tier: interview
+    type: short
+    prompt: When would you pick LinkedHashMap over HashMap and over TreeMap?
+    modelAnswer: |
+      Over HashMap when iteration order matters: LinkedHashMap keeps insertion order (or access order with
+      `accessOrder=true`), at the cost of a little extra memory for the before/after links; lookups stay O(1). The
+      classic use is an LRU cache: access order plus overriding `removeEldestEntry`. Over TreeMap when you need a
+      predictable order but not *sorted* order: TreeMap costs O(log n) per operation and needs comparable keys, while
+      LinkedHashMap stays O(1). Choose TreeMap only for sorted keys or range queries (`floorKey`, `headMap`).
+    keyPoints:
+      - Predictable iteration order, O(1) operations
+      - accessOrder=true + removeEldestEntry gives an LRU cache
+      - TreeMap only for sorted keys / range queries (O(log n))
+
+  # ---------- Killer ----------
+  - id: k1
+    tier: killer
+    type: problem
+    prompt: |
+      A payments service receives trade IDs from a feed that sometimes re-sends them. You must process each ID once,
+      keep the order of first arrival for an audit log, and check "seen before?" in O(1). Which collection, and what
+      changes if memory is limited so you can only remember the last 10,000 IDs?
+    hints:
+      - Which Set keeps insertion order and still gives O(1) contains?
+      - For the bounded version, think about which Map evicts the eldest entry for you.
+      - LinkedHashMap has a protected method you can override that is called after every put.
+    modelAnswer: |
+      Use a `LinkedHashSet<String>`: `if (seen.add(id)) process(id);` gives O(1) dedupe and iteration in first-arrival
+      order for the audit log. For a bounded window, a Set cannot evict, so use a `LinkedHashMap<String, Boolean>`
+      and override `removeEldestEntry(e)` to return `size() > 10_000`: each put that overflows drops the oldest ID.
+      (Insertion order evicts the oldest *arrival*; `accessOrder=true` would make it LRU instead.) Mention the trade-off:
+      an ID older than the window would be processed again, so for exactly-once you still need an idempotency key in
+      the database.
+
+  - id: k2
+    tier: killer
+    type: problem
+    prompt: Why does Map not extend Collection? Defend the design as if the interviewer insists it should.
+    hints:
+      - What would Map.add(E) take as E?
+      - Think about what a Collection's contains(Object) and iterator() would mean for a map.
+      - The designers gave Map three Collection views instead. Name them.
+    modelAnswer: |
+      A Collection is a group of *elements*; a Map is a set of *mappings*. If Map extended Collection, what would the
+      element type be? Keys alone lose the values, values alone lose uniqueness, and pairs make `add(entry)` and
+      `contains(entry)` awkward and inconsistent with `put`/`get`. So the designers kept Map separate and offered
+      three views that ARE collections: `keySet()` (a Set), `values()` (a Collection, duplicates allowed) and
+      `entrySet()` (a Set of Map.Entry). That keeps each interface honest (Interface Segregation) while still letting
+      you iterate a map with the Collection tools.
+
+  - id: k3
+    tier: killer
+    type: problem
+    prompt: |
+      Pick the collection for each and say why in one line: (a) price levels of an order book, best price first;
+      (b) a job scheduler that always runs the most urgent job next; (c) undo history in an editor; (d) customer
+      emails, no duplicates, in sign-up order; (e) a 1,000-entry cache that evicts the least recently used item.
+    hints:
+      - Two of these need ordering by a value, one of them also needs fast lookup by key.
+      - One is LIFO, one is "smallest first".
+      - The cache is the same class as one of the earlier answers, with one constructor flag.
+    modelAnswer: |
+      (a) `TreeMap<Price, Level>`: sorted keys, `firstKey()` / `descendingMap()` for best price, O(log n) updates.
+      (b) `PriorityQueue<Job>` with a Comparator on urgency: O(log n) offer/poll, head is always the most urgent.
+      (c) `ArrayDeque` used as a stack: push/pop at one end, O(1), no synchronization overhead (not `Stack`).
+      (d) `LinkedHashSet<String>`: O(1) dedupe and insertion order.
+      (e) `LinkedHashMap` with `accessOrder=true` and `removeEldestEntry` returning `size() > 1000`.
+
+flashcards:
+  - id: f1
+    front: Is Map a Collection?
+    back: No. Map is a separate root (key-value pairs). Its views keySet(), values() and entrySet() are collections.
+  - id: f2
+    front: HashSet vs LinkedHashSet vs TreeSet - what order does each iterate in?
+    back: HashSet - no guaranteed order (bucket order). LinkedHashSet - insertion order. TreeSet - sorted (natural or Comparator).
+  - id: f3
+    front: What does HashMap.put return?
+    back: The previous value for that key, or null if there was none.
+  - id: f4
+    front: What does Set.add return for a duplicate?
+    back: false - the set did not change.
+  - id: f5
+    front: Best stack and queue class in modern Java?
+    back: ArrayDeque (push/pop for a stack, offer/poll for a queue). Avoid Stack (synchronized, extends Vector).
+  - id: f6
+    front: Arrays.asList vs List.of?
+    back: Arrays.asList is a fixed-size view (set works, add/remove throw). List.of is fully immutable (set throws too) and rejects nulls.

@@ -1,0 +1,203 @@
+{/* Lesson 0.1 theory. Components come from the web app's MDX map (apps/web/src/features/theory/mdxComponents.tsx).
+    Every number below is quoted from code/CollectionsTour.out, which verify-content re-checks against a real run. */}
+
+<Hook>
+"Walk me through the Java Collections Framework. When would you pick each one?" This is the opener of almost every
+core-Java round, and the follow-ups (HashMap internals, ArrayList vs LinkedList) all hang off this one map. If your
+map is fuzzy, every follow-up feels like a new question. If it is sharp, they all feel like zooming in.
+</Hook>
+
+## The picture to remember: a kitchen
+
+Think of a busy restaurant kitchen. Different stations hold food in different ways, because each job needs a
+different promise.
+
+<Scene label="The kitchen crew">
+  <Actor kind="list" label="ArrayList" says="The order rail. Tickets in arrival order, numbered 0, 1, 2. Two identical orders? Both stay." />
+  <Actor kind="set" mood="nope" label="HashSet" says="The guest list at the door. Your name is already here? You are not added twice." />
+  <Actor kind="map" mood="smug" label="HashMap" says="The pantry labels. Say 'apple', I hand you the shelf. One label, one shelf." />
+  <Actor kind="queue" label="ArrayDeque" says="The plate stack and the pass. Take from the top, or serve the oldest first." />
+</Scene>
+
+That is the whole framework in four promises:
+
+- **List** promises *order and positions*. Duplicates allowed.
+- **Set** promises *no duplicates*. Order depends on which kind of set.
+- **Queue / Deque** promises *an order of taking things out*: oldest first, newest first, or smallest first.
+- **Map** promises *one value per key*. It is a lookup table, not a bag of items.
+
+## The family tree
+
+Every collection class sits under two roots. Tap a sticker to see its one-line fact.
+
+<CollectionsFamilyTree />
+
+Three things interviewers check here:
+
+1. **`Map` is not a `Collection`.** A `Collection` holds *elements*; a `Map` holds *key-value pairs*, so a method
+   like `add(E)` has nothing sensible to take. You still get collection *views*: `keySet()`, `values()`, `entrySet()`.
+2. **Interfaces describe the promise, classes keep it.** You program to the interface
+   (`List<String> orders = new ArrayList<>();`) so you can swap the class without touching callers.
+3. **The prefix tells you the engine.** `Hash*` uses `hashCode` and `equals`. `Tree*` uses `compareTo` or a
+   `Comparator` and keeps things sorted. `Linked*` adds a linked list to remember order.
+
+<Callout kind="java">
+`Iterable` is why the enhanced for loop works on every collection: `for (String s : orders)` compiles to
+`orders.iterator()` plus `hasNext()` and `next()`. A `Map` is not `Iterable`, which is why you loop over
+`map.entrySet()` instead.
+</Callout>
+
+## Watch the promises in action
+
+Same `add()` calls go into four collections at once. Add `apple` twice and watch the HashSet refuse it. Then press
+**Load the tour** to replay exactly what the code below does.
+
+<CollectionsPlayground />
+
+Notice the HashSet's order: `[banana, apple, kiwi, mango]`. It is not insertion order and not alphabetical. It is
+**bucket order**: banana sits in bucket 0, apple in 1, kiwi in 2, mango in 15. Which bucket a key lands in comes
+from its hash code, so for a HashSet "order" is an accident of maths, and the Javadoc says you must never rely on it.
+
+## How a HashSet picks the bucket (exact internals)
+
+A `HashSet` is a `HashMap` in disguise: your element is the key and every value is one shared dummy object. The map
+keeps an array called `table`. To place a key it runs three steps, shown here with the real numbers for `"apple"`.
+Change the key or the table length and the board recomputes with Java's own algorithm.
+
+<HashMathBoard initial="apple" />
+
+So `"apple".hashCode()` is 93029210 and, in a 16-slot table, it lands in **bucket 1**. Step 2 matters because step 3
+only looks at the low bits: mixing the high half in stops keys that differ only in their high bits from piling into
+one bucket. Two different keys in the same bucket (here `apple` and `cherry` both land in bucket 1) is a
+**collision**: they form a short chain through each node's `next` field. That is the doorway to Lesson 0.3.
+
+## Run it: the collections tour
+
+Here is the program the playground replays. Run it on the live JVM, or edit it and break things on purpose.
+
+<RunnableCode file="CollectionsTour.java" />
+
+### Piece by piece
+
+**1. List keeps everything, in order.**
+
+```java
+List<String> list = new ArrayList<>();
+list.add("mango"); list.add("kiwi"); list.add("apple"); list.add("banana"); list.add("apple");
+```
+
+```output
+1 ArrayList      [mango, kiwi, apple, banana, apple] get(2)=apple
+```
+
+Both `apple`s stay, and `get(2)` jumps straight to slot 2. That jump is O(1) because an `ArrayList` is a plain array
+underneath.
+
+**2. Three sets, three orders.**
+
+```output
+2 HashSet        [banana, apple, kiwi, mango] size=4
+3 LinkedHashSet  [mango, kiwi, apple, banana]
+4 TreeSet        [apple, banana, kiwi, mango]
+```
+
+Same five words in, four unique words out, in three different orders: bucket order, insertion order, sorted order.
+That one line of output is the best 10-second answer to "HashSet vs LinkedHashSet vs TreeSet".
+
+**3. `add` tells you whether anything changed.**
+
+```output
+5 add("apple") again -> false
+```
+
+**4. `put` hands back the old value.**
+
+```java
+Map<String, Integer> stock = new HashMap<>();
+stock.put("apple", 10);   // returns null: nothing was there
+stock.put("apple", 25);   // returns 10: the value it replaced
+```
+
+```output
+6 put first      -> null
+7 put again      -> 10
+8 get("apple")   -> 25, get("kiwi") -> null
+9 Map is a Collection? false
+```
+
+<Callout kind="trap">
+`get` returns `null` both when the key is missing **and** when the key maps to `null`. Use `containsKey`, or
+`getOrDefault(key, 0)`, when the difference matters.
+</Callout>
+
+**5. One class, two disciplines.** `ArrayDeque` is a queue when you use `offer`/`poll` and a stack when you use
+`push`/`pop`.
+
+```output
+11 queue poll()  -> first
+12 stack pop()   -> top
+```
+
+**6. A PriorityQueue is not sorted.** It is a heap: only the head is guaranteed to be the smallest.
+
+```output
+13 PriorityQueue [1, 2, 4, 5, 3] peek=1
+```
+
+**7. Read-only lists bite.**
+
+```output
+14 List.of(...).add -> UnsupportedOperationException
+15 Arrays.asList [z, y] add -> UnsupportedOperationException
+```
+
+`List.of` is fully immutable. `Arrays.asList` is a fixed-size *view* of an array: `set` works, `add` does not.
+
+## Break it (predict first, then run)
+
+Edit the code above and predict before you press Run:
+
+1. Change the `TreeSet` line to `new TreeSet<>(Comparator.reverseOrder())` and add the fruits. What prints?
+2. Add `list.remove("apple")` after step 1. Which apple goes, the first or the last?
+3. Replace `HashSet` with `LinkedHashSet` in step 2 and add `"apple"` again at the end. Does `apple` move to the end?
+4. Put `null` into the `HashMap` as a key, then into a `TreeMap`. Which one complains, and why?
+
+## Choosing, in 10 seconds
+
+<CollectionPicker />
+
+| Need | Pick | Main cost | Why not the others |
+|---|---|---|---|
+| Ordered items, index access | `ArrayList` | get O(1), add at end amortised O(1) | `LinkedList` get(i) is O(n) and its nodes waste memory |
+| Unique, any order | `HashSet` | add/contains O(1) average | `TreeSet` pays O(log n) for an order you do not need |
+| Unique, keep first-seen order | `LinkedHashSet` | O(1), a bit more memory | `HashSet` order is an accident |
+| Unique, sorted | `TreeSet` | O(log n) | needs `Comparable` or a `Comparator` |
+| Lookup by key | `HashMap` | get/put O(1) average | `TreeMap` only if keys must be sorted |
+| Stack or queue | `ArrayDeque` | O(1) at both ends | `Stack` is synchronized legacy; `LinkedList` allocates a node per item |
+| Smallest / most urgent first | `PriorityQueue` | offer/poll O(log n) | sorting the whole list each time is O(n log n) |
+
+**Why the Java designers split things this way:** each interface makes one promise (Interface Segregation), and each
+class picks one engine (array, hash table, red-black tree, heap). You choose the promise your code needs, then the
+engine with the right costs. That is also exactly how you should *say* your answer in the interview: promise first,
+then engine, then cost.
+
+<Callout kind="spring">
+Spring nudge: when a bean asks for `List<Grader> graders`, Spring injects every bean of that type, in order. Stackcraft
+uses exactly that to find its question graders, so adding a question type never edits existing code.
+</Callout>
+
+<CheatCard title="Cheat card: the Collections map">
+
+- Two roots: `Collection` (List, Set, Queue) and `Map`. **Map is not a Collection.**
+- List = order + duplicates + index. Set = no duplicates. Queue/Deque = take-out order. Map = key to value.
+- Order: `HashSet` none (bucket order), `LinkedHashSet` insertion, `TreeSet` sorted.
+- `set.add(dup)` returns `false`. `map.put(k, v)` returns the **old** value or `null`.
+- `"apple".hashCode()` = 93029210, bucket 1 of 16: hash, spread (`h ^ h >>> 16`), mask (`& (n - 1)`).
+- Stack and queue: `ArrayDeque`. Never `Stack`.
+- `PriorityQueue` prints in heap order; only `peek()` is guaranteed smallest.
+- `List.of` immutable; `Arrays.asList` fixed-size view.
+
+</CheatCard>
+
+Next up: **Lesson 0.2, ArrayList vs LinkedList**, where we open up `elementData`, watch the array grow by 1.5x, and
+find out why `LinkedList` almost never wins.

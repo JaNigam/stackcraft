@@ -1,0 +1,15 @@
+1 ArrayList      [mango, kiwi, apple, banana, apple] get(2)=apple
+2 HashSet        [banana, apple, kiwi, mango] size=4
+3 LinkedHashSet  [mango, kiwi, apple, banana]
+4 TreeSet        [apple, banana, kiwi, mango]
+5 add("apple") again -> false
+6 put first      -> null
+7 put again      -> 10
+8 get("apple")   -> 25, get("kiwi") -> null
+9 Map is a Collection? false
+10 "apple".hashCode()=93029210 bucket=1 of 16
+11 queue poll()  -> first
+12 stack pop()   -> top
+13 PriorityQueue [1, 2, 4, 5, 3] peek=1
+14 List.of(...).add -> UnsupportedOperationException
+15 Arrays.asList [z, y] add -> UnsupportedOperationException

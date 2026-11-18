@@ -1,0 +1,13 @@
+id: java-core.u00.l01
+lesson: 1
+title: The Collections Map
+subtitle: Every collection in one picture, and how to pick the right one in 10 seconds
+minutes: 25
+completionXp: 10
+whereAsked:
+  - Goldman Sachs Superday, round 1 (core Java deep dive)
+  - Most BFSI first technical rounds ("walk me through the Collections framework")
+  - FAANG phone screens, as the warm-up before a HashMap follow-up
+prerequisites: []
+codeFiles:
+  - CollectionsTour.java
