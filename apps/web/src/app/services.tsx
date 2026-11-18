@@ -49,6 +49,8 @@ export function offlineServices(): Services {
  * otherwise the whole app runs from the bundle and browser storage. `?offline` forces offline mode.
  */
 export async function chooseServices(): Promise<Services> {
+  // Static hosting (GitHub Pages) has no api: skip the probe and go straight to offline mode.
+  if (import.meta.env.VITE_STATIC_SITE === 'true') return offlineServices();
   if (new URLSearchParams(location.search).has('offline')) return offlineServices();
   try {
     const ctrl = new AbortController();

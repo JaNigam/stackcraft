@@ -18,7 +18,7 @@ export function ProgressHeader() {
       <div className="pg-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={xp.next ? `${xp.toNext} XP to ${xp.next}` : 'Top rank'}>
         <div className="pg-bar__fill" style={{ width: `${pct}%` }} />
         <span className="pg-bar__text">
-          {xp.total} XP{xp.next ? ` · ${xp.toNext} to ${xp.next}` : ''}
+          {xp.total} XP{xp.next && <span className="pg-bar__more">{` · ${xp.toNext} to ${xp.next}`}</span>}
         </span>
       </div>
       <span className={`pg-streak${streak > 0 ? ' is-lit' : ''}`} title={`${streak}-day streak`}>

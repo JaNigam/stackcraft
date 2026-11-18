@@ -35,7 +35,10 @@ docker compose -f infra/docker-compose.yml up --build
 
 ## Static-only hosting
 
-`apps/web/dist` works on its own (GitHub Pages, any CDN): with no `/api` it boots in offline mode.
+`apps/web/dist` works on its own: with no `/api` it boots in offline mode. `.github/workflows/pages.yml` publishes it
+to **https://janigam.github.io/stackcraft/** on every push to `main` that touches the web app or content: it runs the
+web tests and `verify-content`, builds with `VITE_BASE=/stackcraft/` and `VITE_STATIC_SITE=true` (skip the api probe,
+header shows "Static preview"), and copies `index.html` to `404.html` so deep links work. No api or runner is deployed.
 
 ## What the Cloud series adds
 

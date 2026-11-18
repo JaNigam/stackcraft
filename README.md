@@ -25,6 +25,8 @@ Decisions: [ADR 0001 three services](docs/adr/0001-monorepo-three-services.md) �
 [ADR 0003 runner isolation](docs/adr/0003-runner-isolation.md) ·
 [API contract](docs/api/openapi.yaml) · [Style guide](docs/STYLE-GUIDE.md)
 
+**Try it on any device:** https://janigam.github.io/stackcraft/ (static preview: everything except live code runs; progress is saved in your browser).
+
 ## Run it locally (no Docker)
 
 Needs JDK 21 and Node 24. Maven is not required (each service has a wrapper). Three terminals:

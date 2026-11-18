@@ -33,7 +33,7 @@ function Shell({ mode }: { mode: Services['mode'] }) {
         <div className="app-header__row app-header__row--progress">
           <ProgressHeader />
           <span className={`app-mode app-mode--${mode}`} title={mode === 'online' ? 'Connected to the api' : 'No api: content from the bundle, progress saved in this browser'}>
-            {mode === 'online' ? 'Online' : 'Offline mode'}
+            {mode === 'online' ? 'Online' : import.meta.env.VITE_STATIC_SITE === 'true' ? 'Static preview' : 'Offline mode'}
           </span>
         </div>
       </header>
@@ -65,7 +65,7 @@ export function App({ services }: { services: Services }) {
   return (
     <QueryClientProvider client={client}>
       <ServicesProvider value={services}>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || undefined}>
           <Shell mode={services.mode} />
         </BrowserRouter>
       </ServicesProvider>

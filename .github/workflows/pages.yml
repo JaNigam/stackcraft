@@ -1,0 +1,71 @@
+# Publishes the web app as a static, offline-mode site on GitHub Pages:
+#   https://janigam.github.io/stackcraft/
+# No api and no runner are deployed (ADR 0003: the runner must never be public until runs are sandboxed).
+# Content, playgrounds and quizzes work; progress is saved in the browser; code blocks show verified output.
+name: Deploy web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/web/**', 'content/**', 'docs/api/**', 'scripts/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Verify content (re-runs every snippet on the JDK)
+        run: node ../../scripts/verify-content.mjs
+
+      - name: Build static site
+        run: npm run build
+        env:
+          VITE_BASE: /stackcraft/
+          VITE_STATIC_SITE: 'true'
+
+      # Pages has no SPA rewrites: serving index.html as 404.html makes deep links like /stackcraft/chapters/... work.
+      - run: cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

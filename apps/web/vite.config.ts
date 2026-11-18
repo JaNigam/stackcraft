@@ -10,6 +10,8 @@ const repoRoot = path.resolve(__dirname, '../..');
 // Content lives outside the web root (content as code, shared with the api). Vite compiles theory.mdx at build
 // time and bundles chapter YAML + verified code output, so the site also works as a static, offline-capable build.
 export default defineConfig({
+  // GitHub Pages serves the site under /<repo>/; VITE_BASE=/stackcraft/ in that build. Locally and in Docker: '/'.
+  base: process.env.VITE_BASE ?? '/',
   plugins: [
     // remark-gfm: GitHub-style tables, task lists and strikethrough in theory.mdx.
     { enforce: 'pre', ...mdx({ providerImportSource: '@mdx-js/react', remarkPlugins: [remarkGfm] }) },

@@ -1169,3 +1169,32 @@
     display: none;
   }
 }
+
+/* Phone header: fit logo, nav, theme menu and progress on two rows without clipping. */
+@media (max-width: 560px) {
+  .app-header__row {
+    gap: 0.4rem;
+  }
+
+  .app-nav a {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.9rem;
+  }
+
+  .tm-trigger {
+    padding: 0.2rem 0.45rem;
+    min-height: 36px;
+  }
+
+  .pg-bar__more {
+    display: none;
+  }
+
+  .pg-bar {
+    min-width: 70px;
+  }
+
+  .app-mode {
+    font-size: 0.68rem;
+  }
+}

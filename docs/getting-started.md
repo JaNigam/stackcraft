@@ -75,7 +75,16 @@ Start only the web app (`npm run dev`), or add `?offline` to any URL. The header
 - progress, XP and the Trap Board are saved in your browser;
 - code blocks show their verified output instead of running.
 
-## 6. Smoke test
+## 6. On your phone, no setup
+
+Open https://janigam.github.io/stackcraft/ . It is the offline-mode build, redeployed on every push to `main`.
+To build the same thing locally (Git Bash needs `MSYS_NO_PATHCONV=1` or it rewrites `/stackcraft/` into a Windows path):
+
+```bash
+cd apps/web && MSYS_NO_PATHCONV=1 VITE_BASE=/stackcraft/ VITE_STATIC_SITE=true npm run build && npx vite preview
+```
+
+## 7. Smoke test
 
 1. Home page shows the Java Core series and the header says **Online**.
 2. Open Lesson 0.1, press **Load the tour** in the playground: the HashSet prints `[banana, apple, kiwi, mango]`.
