@@ -1,0 +1,7 @@
+questions:
+  - id: q1
+    tier: warmup
+    type: mcq
+    prompt: Out of range answer
+    options: [a, b]
+    answer: 5

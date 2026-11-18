@@ -1,0 +1,31 @@
+questions:
+  - id: w1
+    tier: warmup
+    type: mcq
+    prompt: Which list gives O(1) get(i)?
+    options: [LinkedList, ArrayList]
+    answer: 1
+    explanation: ArrayList is backed by an array.
+  - id: i1
+    tier: interview
+    type: predict
+    code: |
+      public class P { public static void main(String[] a) { System.out.println(1 + 2 + "3"); } }
+    expected: "33"
+    explanation: Left to right, int addition first, then string concatenation.
+  - id: i2
+    tier: interview
+    type: short
+    prompt: Why must equals and hashCode agree?
+    modelAnswer: Hash collections look up the bucket by hashCode first, then compare with equals.
+    keyPoints: [bucket by hashCode, then equals]
+  - id: k1
+    tier: killer
+    type: problem
+    prompt: Design an LRU cache.
+    hints: [Think LinkedHashMap, accessOrder=true, removeEldestEntry]
+    modelAnswer: Extend LinkedHashMap with accessOrder=true and override removeEldestEntry.
+flashcards:
+  - id: f1
+    front: HashSet is backed by?
+    back: A HashMap (values are a dummy PRESENT object).

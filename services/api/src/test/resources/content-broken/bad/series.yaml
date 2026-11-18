@@ -1,0 +1,6 @@
+id: bad
+title: Broken
+units:
+  - id: u00
+    dir: u00
+    chapters: [l01]

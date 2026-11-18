@@ -1,0 +1,10 @@
+id: demo
+title: Demo series
+tagline: Fixture for tests
+units:
+  - id: u00
+    number: 0
+    dir: u00-intro
+    title: Intro
+    summary: Just enough content to test every path.
+    chapters: [l01-basics]

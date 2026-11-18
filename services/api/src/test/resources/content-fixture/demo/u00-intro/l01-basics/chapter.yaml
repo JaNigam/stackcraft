@@ -1,0 +1,8 @@
+id: demo.u00.l01
+lesson: 1
+title: Basics
+subtitle: A fixture chapter
+minutes: 5
+completionXp: 10
+whereAsked: [Fixture interview]
+codeFiles: [Hello.java]

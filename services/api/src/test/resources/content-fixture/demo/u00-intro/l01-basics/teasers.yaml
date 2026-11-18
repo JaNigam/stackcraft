@@ -1,0 +1,6 @@
+teasers:
+  - id: t1
+    prompt: Does HashSet keep insertion order?
+    options: ["Yes", "No"]
+    answer: 1
+    reveal: No. It is backed by a HashMap; order follows buckets.

@@ -1,0 +1,457 @@
+openapi: 3.1.0
+info:
+  title: Stackcraft API
+  version: 1.0.0
+  description: |
+    The contract between `web` and `api`. Single source of truth: the TypeScript client types are generated from
+    this file (`npm run gen:api` in apps/web) and `OpenApiContractTest` in services/api fails if a controller and
+    this file disagree on paths or methods.
+
+    Conventions
+    - Versioned under `/api/v1`. Breaking changes go to `/api/v2`.
+    - Every write carries a client-generated `attemptId` (8-64 chars, letters, digits, '-'). Re-sending the same
+      `attemptId` is safe: the response has `duplicate: true` and no XP is awarded twice.
+    - Errors are RFC 9457 problem documents (`application/problem+json`) with a stable `type` URI.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: content
+  - name: quiz
+  - name: progress
+  - name: execution
+
+paths:
+  /api/v1/series:
+    get:
+      tags: [content]
+      operationId: listSeries
+      responses:
+        '200':
+          description: All series
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/SeriesSummary' } }
+
+  /api/v1/series/{seriesId}:
+    get:
+      tags: [content]
+      operationId: getSeries
+      parameters: [ { $ref: '#/components/parameters/SeriesId' } ]
+      responses:
+        '200':
+          description: Series with units and chapter summaries
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SeriesView' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/chapters/{chapterId}:
+    get:
+      tags: [content]
+      operationId: getChapter
+      parameters: [ { $ref: '#/components/parameters/ChapterId' } ]
+      responses:
+        '200':
+          description: Chapter metadata, teasers and question bank. Theory (MDX) is bundled by the web app.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChapterView' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/chapters/{chapterId}/questions/{questionId}/answers:
+    post:
+      tags: [quiz]
+      operationId: submitAnswer
+      parameters:
+        - { $ref: '#/components/parameters/ChapterId' }
+        - { name: questionId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnswerBody' }
+      responses:
+        '200':
+          description: Graded answer, XP awarded, fresh progress
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnswerResponse' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/chapters/{chapterId}/teasers/{teaserId}/commits:
+    post:
+      tags: [quiz]
+      operationId: commitTeaser
+      parameters:
+        - { $ref: '#/components/parameters/ChapterId' }
+        - { name: teaserId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommitBody' }
+      responses:
+        '200':
+          description: Whether the committed guess was right, plus the reveal
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TeaserResponse' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/chapters/{chapterId}/completion:
+    post:
+      tags: [progress]
+      operationId: completeChapter
+      parameters: [ { $ref: '#/components/parameters/ChapterId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AttemptBody' }
+      responses:
+        '200':
+          description: Lesson marked complete (completion XP once)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CompletionResponse' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/progress:
+    get:
+      tags: [progress]
+      operationId: getProgress
+      responses:
+        '200':
+          description: XP, rank, streak and best scores for the current learner
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProgressView' }
+
+  /api/v1/trap-board:
+    get:
+      tags: [progress]
+      operationId: getTrapBoard
+      responses:
+        '200':
+          description: Gotchas the learner fell for and has not yet escaped, most-fallen first
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/TrapView' } }
+
+  /api/v1/flashcards/due:
+    get:
+      tags: [progress]
+      operationId: getDueFlashcards
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 20, default: 5 } }
+      responses:
+        '200':
+          description: Cards due today from completed chapters (Leitner boxes)
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/DueCard' } }
+
+  /api/v1/flashcards/reviews:
+    post:
+      tags: [progress]
+      operationId: reviewFlashcard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReviewBody' }
+      responses:
+        '200':
+          description: New box and due date
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReviewResponse' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/runs:
+    post:
+      tags: [execution]
+      operationId: runSnippet
+      description: Compiles and runs one Java file on the internal runner (10 s, 128 MB heap, 64 KB output).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RunRequest' }
+      responses:
+        '200':
+          description: Run finished (including compile errors and timeouts; see `status`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunResult' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/runs/status:
+    get:
+      tags: [execution]
+      operationId: runnerStatus
+      responses:
+        '200':
+          description: Whether runs are currently accepted (false while the circuit breaker is open)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available]
+                properties: { available: { type: boolean } }
+
+components:
+  parameters:
+    SeriesId: { name: seriesId, in: path, required: true, schema: { type: string }, example: java-core }
+    ChapterId: { name: chapterId, in: path, required: true, schema: { type: string }, example: java-core.u00.l01 }
+
+  responses:
+    Problem:
+      description: RFC 9457 problem document
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    Problem:
+      type: object
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+
+    SeriesSummary:
+      type: object
+      required: [id, title, unitCount, chapterCount]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        tagline: { type: [string, 'null'] }
+        unitCount: { type: integer }
+        chapterCount: { type: integer }
+
+    SeriesView:
+      type: object
+      required: [id, title, units]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        tagline: { type: [string, 'null'] }
+        units: { type: array, items: { $ref: '#/components/schemas/UnitView' } }
+
+    UnitView:
+      type: object
+      required: [id, number, title, chapters]
+      properties:
+        id: { type: string }
+        number: { type: integer }
+        title: { type: string }
+        summary: { type: [string, 'null'] }
+        chapters: { type: array, items: { $ref: '#/components/schemas/ChapterSummary' } }
+
+    ChapterSummary:
+      type: object
+      required: [id, lesson, title, minutes]
+      properties:
+        id: { type: string }
+        lesson: { type: integer }
+        title: { type: string }
+        subtitle: { type: [string, 'null'] }
+        minutes: { type: integer }
+
+    ChapterMeta:
+      type: object
+      required: [id, seriesId, unitId, lesson, title, minutes, completionXp, whereAsked, prerequisites, codeFiles]
+      properties:
+        id: { type: string }
+        seriesId: { type: string }
+        unitId: { type: string }
+        lesson: { type: integer }
+        title: { type: string }
+        subtitle: { type: [string, 'null'] }
+        minutes: { type: integer }
+        completionXp: { type: integer }
+        whereAsked: { type: array, items: { type: string } }
+        prerequisites: { type: array, items: { type: string } }
+        codeFiles: { type: array, items: { type: string } }
+
+    Teaser:
+      type: object
+      required: [id, prompt, options, answer, reveal, xp]
+      properties:
+        id: { type: string }
+        prompt: { type: string }
+        code: { type: [string, 'null'] }
+        options: { type: array, items: { type: string } }
+        answer: { type: integer, description: Index of the right option. Not secret (content is public); the UI hides it until commit. }
+        reveal: { type: string }
+        xp: { type: integer }
+
+    QuestionType:
+      type: string
+      enum: [mcq, predict, short, problem]
+
+    Question:
+      type: object
+      description: Flat union; `type` says which optional fields are present.
+      required: [id, type, tier, prompt, xp]
+      properties:
+        id: { type: string }
+        type: { $ref: '#/components/schemas/QuestionType' }
+        tier: { type: string, enum: [warmup, interview, killer] }
+        prompt: { type: string }
+        code: { type: string, description: 'mcq (optional), predict' }
+        options: { type: array, items: { type: string }, description: mcq }
+        answer: { type: integer, description: mcq }
+        expected: { type: string, description: predict (verified by running the code) }
+        explanation: { type: string, description: 'mcq, predict' }
+        modelAnswer: { type: string, description: 'short, problem' }
+        keyPoints: { type: array, items: { type: string }, description: short }
+        hints: { type: array, items: { type: string }, description: problem }
+        xp: { type: integer }
+
+    ChapterView:
+      type: object
+      required: [meta, teasers, questions, flashcardCount]
+      properties:
+        meta: { $ref: '#/components/schemas/ChapterMeta' }
+        teasers: { type: array, items: { $ref: '#/components/schemas/Teaser' } }
+        questions: { type: array, items: { $ref: '#/components/schemas/Question' } }
+        flashcardCount: { type: integer }
+
+    AttemptBody:
+      type: object
+      required: [attemptId]
+      properties:
+        attemptId: { type: string, minLength: 8, maxLength: 64, pattern: '^[A-Za-z0-9-]+$' }
+
+    AnswerBody:
+      allOf:
+        - $ref: '#/components/schemas/AttemptBody'
+        - type: object
+          properties:
+            choice: { type: integer, description: mcq }
+            text: { type: string, maxLength: 8192, description: predict }
+            selfScore: { type: integer, minimum: 0, maximum: 2, description: 'short, problem' }
+            hintsUsed: { type: integer, minimum: 0, description: problem }
+
+    CommitBody:
+      allOf:
+        - $ref: '#/components/schemas/AttemptBody'
+        - type: object
+          required: [choice]
+          properties:
+            choice: { type: integer }
+
+    ReviewBody:
+      allOf:
+        - $ref: '#/components/schemas/AttemptBody'
+        - type: object
+          required: [cardKey, remembered]
+          properties:
+            cardKey: { type: string, example: java-core.u00.l01/f1 }
+            remembered: { type: boolean }
+
+    ProgressView:
+      type: object
+      required: [learnerId, totalXp, rank, rankLabel, rankMinXp, xpToNextRank, streakDays, completedChapters, bestScores]
+      properties:
+        learnerId: { type: string }
+        totalXp: { type: integer }
+        rank: { type: string, enum: [TRAINEE, DEVELOPER, SENIOR, STAFF, PRINCIPAL] }
+        rankLabel: { type: string }
+        rankMinXp: { type: integer }
+        nextRank: { type: [string, 'null'] }
+        nextRankLabel: { type: [string, 'null'] }
+        nextRankMinXp: { type: [integer, 'null'] }
+        xpToNextRank: { type: integer }
+        streakDays: { type: integer }
+        completedChapters: { type: array, items: { type: string } }
+        bestScores: { type: object, additionalProperties: { type: number }, description: 'keyed chapterId/itemId' }
+
+    AnswerResponse:
+      type: object
+      required: [correct, score, feedback, explanation, xpAwarded, duplicate, progress]
+      properties:
+        correct: { type: boolean }
+        score: { type: number, minimum: 0, maximum: 1 }
+        feedback: { type: string }
+        explanation: { type: string }
+        xpAwarded: { type: integer }
+        duplicate: { type: boolean }
+        progress: { $ref: '#/components/schemas/ProgressView' }
+
+    TeaserResponse:
+      type: object
+      required: [correct, answer, reveal, xpAwarded, duplicate, progress]
+      properties:
+        correct: { type: boolean }
+        answer: { type: integer }
+        reveal: { type: string }
+        xpAwarded: { type: integer }
+        duplicate: { type: boolean }
+        progress: { $ref: '#/components/schemas/ProgressView' }
+
+    CompletionResponse:
+      type: object
+      required: [xpAwarded, duplicate, progress]
+      properties:
+        xpAwarded: { type: integer }
+        duplicate: { type: boolean }
+        progress: { $ref: '#/components/schemas/ProgressView' }
+
+    TrapView:
+      type: object
+      required: [chapterId, itemId, kind, prompt, timesFallen, lastFallenAt]
+      properties:
+        chapterId: { type: string }
+        itemId: { type: string }
+        kind: { type: string, enum: [question, teaser] }
+        prompt: { type: string }
+        timesFallen: { type: integer }
+        lastFallenAt: { type: string, format: date-time }
+
+    DueCard:
+      type: object
+      required: [key, chapterId, chapterTitle, front, back, box, dueOn]
+      properties:
+        key: { type: string }
+        chapterId: { type: string }
+        chapterTitle: { type: string }
+        front: { type: string }
+        back: { type: string }
+        box: { type: integer, minimum: 1, maximum: 5 }
+        dueOn: { type: string, format: date }
+
+    ReviewResponse:
+      type: object
+      required: [box, dueOn, xpAwarded, duplicate, progress]
+      properties:
+        box: { type: integer }
+        dueOn: { type: string, format: date }
+        xpAwarded: { type: integer }
+        duplicate: { type: boolean }
+        progress: { $ref: '#/components/schemas/ProgressView' }
+
+    RunRequest:
+      type: object
+      required: [source]
+      properties:
+        source: { type: string, maxLength: 65536 }
+        stdin: { type: string, maxLength: 8192 }
+
+    RunResult:
+      type: object
+      required: [status, stdout, stderr, exitCode, durationMs, truncated]
+      properties:
+        status: { type: string, enum: [OK, COMPILE_ERROR, RUNTIME_ERROR, TIMEOUT, OUTPUT_LIMIT] }
+        stdout: { type: string }
+        stderr: { type: string }
+        exitCode: { type: integer }
+        durationMs: { type: integer }
+        truncated: { type: boolean }

@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test-${random.uuid};MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+stackcraft:
+  content:
+    root: src/test/resources/content-fixture
+    reload: false
+  runner:
+    url: http://127.0.0.1:1
+    read-timeout: 2s
