@@ -1,0 +1,33 @@
+# Build output
+target/
+dist/
+build/
+coverage/
+*.class
+
+# Dependencies
+node_modules/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local env and data (12-factor: config comes from env, never committed)
+.env
+.env.*
+!.env.example
+*.db
+*.mv.db
+*.trace.db
+data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Playwright
+test-results/
+playwright-report/
