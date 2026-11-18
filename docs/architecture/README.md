@@ -25,6 +25,7 @@ flowchart LR
 7. [Data and progress](07-data-and-progress.md)
 8. [Resilience and security](08-resilience-and-security.md)
 9. [Deployment](09-deployment.md)
+10. [Identity and sessions](10-identity-and-sessions.md)
 
 ## Principles, and where to see them
 

@@ -84,7 +84,24 @@ To build the same thing locally (Git Bash needs `MSYS_NO_PATHCONV=1` or it rewri
 cd apps/web && MSYS_NO_PATHCONV=1 VITE_BASE=/stackcraft/ VITE_STATIC_SITE=true npm run build && npx vite preview
 ```
 
-## 7. Smoke test
+## 7. Accounts (local)
+
+With the api running, use **Sign in → Create an account** in the header. Progress you earned as a guest in that
+browser moves into the account on first sign-in. Accounts live in the api's database (H2 file in
+`services/api/data/` in dev).
+
+- In `dev` the token-signing key is generated at start-up, so **restarting the api signs everyone out**.
+- In `prod` set `STACKCRAFT_AUTH_JWT_PRIVATE_KEY` to an RSA PKCS#8 PEM, or the api refuses to start:
+
+```bash
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out jwt-private.pem
+```
+
+- Calling the api by hand: writes need the `X-XSRF-TOKEN` header set to the `XSRF-TOKEN` cookie value from any
+  earlier GET, plus the `sc_access` cookie for protected endpoints.
+- The static GitHub Pages site has no accounts: it stays guest-only.
+
+## 8. Smoke test
 
 1. Home page shows the Java Core series and the header says **Online**.
 2. Open Lesson 0.1, press **Load the tour** in the playground: the HashSet prints `[banana, apple, kiwi, mango]`.

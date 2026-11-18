@@ -23,5 +23,6 @@ Start here, then go as deep as you need.
 7. [Data and progress](architecture/07-data-and-progress.md): the XP log, idempotency, schema
 8. [Resilience and security](architecture/08-resilience-and-security.md): timeouts, circuit breaker, limits
 9. [Deployment](architecture/09-deployment.md): Docker images, compose, and what the Cloud series adds
+10. [Identity and sessions](architecture/10-identity-and-sessions.md): accounts, JWT + refresh cookies, CSRF, guest import
 
 Each chapter ends with "Interview angle": the system-design or LLD question that part of Stackcraft answers.
