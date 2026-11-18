@@ -4,6 +4,7 @@ import { rankFor } from '@/entities/learner/ranks';
 import { ApiError } from '@/shared/api/http';
 import type { AnswerBody, CommitBody, DueCard, ProgressView, ReviewBody, TrapView } from '@/shared/api/types';
 import type { ProgressService } from './ProgressService';
+import type { GuestImport } from '@/shared/api/types';
 
 /**
  * Offline adapter: the same rules as the api (idempotent attemptId, no XP farming, trap board, Leitner boxes),
@@ -116,6 +117,31 @@ export class LocalProgressService implements ProgressService {
 
   async getProgress() {
     return this.progressOf(this.read());
+  }
+
+  /**
+   * What a guest earned in this browser, in the api's import shape (ADR 0004). XP numbers are left out on purpose:
+   * the server re-derives them from the content. Returns null when there is nothing to import.
+   */
+  exportGuest(): GuestImport | null {
+    const s = this.read();
+    if (s.events.length === 0 && s.traps.length === 0 && s.cards.length === 0) return null;
+    return {
+      events: s.events.slice(-2000).map(({ attemptId, kind, chapterId, itemId, score, at }) => ({ attemptId, kind, chapterId, itemId, score, at })),
+      traps: s.traps.filter((t) => !t.cleared).slice(-500).map(({ cleared: _c, ...t }) => t),
+      cards: s.cards.slice(-1000),
+    };
+  }
+
+  /** After a successful import: keep one backup copy, then start the next guest session empty. */
+  clearAfterImport() {
+    try {
+      const raw = this.storage.getItem(KEY);
+      if (raw) this.storage.setItem(`${KEY}.imported-backup`, raw);
+      this.storage.removeItem(KEY);
+    } catch {
+      /* blocked storage */
+    }
   }
 
   async submitAnswer(chapterId: string, questionId: string, body: AnswerBody) {

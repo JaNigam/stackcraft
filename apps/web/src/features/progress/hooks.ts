@@ -2,16 +2,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProgressService } from '@/app/services';
 import type { AnswerBody, CommitBody, ProgressView, ReviewBody } from '@/shared/api/types';
 import { announceXp } from './xpEvents';
+import { useSession } from '@/features/auth/session';
 
 /**
  * Small focused hooks (ISP) over one cached progress query. Mutations keep the same attemptId across their own
  * retries, so a flaky network can never double-award XP: the server answers `duplicate: true`.
  */
-const KEY = ['progress'];
+/** Whose data a query holds. Part of every progress key, so switching accounts can never show the wrong person's XP. */
+function useWho(): string {
+  const s = useSession();
+  return s.status === 'signedIn' ? s.me.id : s.status;
+}
 
 export function useProgress() {
   const svc = useProgressService();
-  return useQuery({ queryKey: KEY, queryFn: () => svc.getProgress() });
+  const who = useWho();
+  return useQuery({ queryKey: ['progress', who], queryFn: () => svc.getProgress(), enabled: who !== 'loading' });
 }
 
 export function useXp() {
@@ -29,18 +35,21 @@ export function useCompleted(chapterId: string) {
 
 export function useTrapBoard() {
   const svc = useProgressService();
-  return useQuery({ queryKey: ['trap-board'], queryFn: () => svc.getTrapBoard() });
+  const who = useWho();
+  return useQuery({ queryKey: ['trap-board', who], queryFn: () => svc.getTrapBoard(), enabled: who !== 'loading' });
 }
 
 export function useDueFlashcards(limit = 5) {
   const svc = useProgressService();
-  return useQuery({ queryKey: ['flashcards', 'due', limit], queryFn: () => svc.getDueFlashcards(limit) });
+  const who = useWho();
+  return useQuery({ queryKey: ['flashcards', who, 'due', limit], queryFn: () => svc.getDueFlashcards(limit), enabled: who !== 'loading' });
 }
 
 function useAfterWrite() {
   const qc = useQueryClient();
+  const who = useWho();
   return (r: { progress: ProgressView; xpAwarded: number; duplicate: boolean }, label: string) => {
-    qc.setQueryData(KEY, r.progress);
+    qc.setQueryData(['progress', who], r.progress);
     qc.invalidateQueries({ queryKey: ['trap-board'] });
     if (!r.duplicate) announceXp(r.xpAwarded, label);
   };

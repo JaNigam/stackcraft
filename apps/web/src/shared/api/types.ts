@@ -25,3 +25,6 @@ export type ReviewResponse = S['ReviewResponse'];
 export type RunRequest = S['RunRequest'];
 export type RunResult = S['RunResult'];
 export type Problem = S['Problem'];
+export type Me = S['Me'];
+export type GuestImport = S['GuestImport'];
+export type ImportResult = S['ImportResult'];

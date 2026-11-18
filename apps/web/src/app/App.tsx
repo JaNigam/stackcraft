@@ -10,6 +10,9 @@ import { ChapterPage } from '@/pages/ChapterPage';
 import { TrapBoardPage } from '@/pages/TrapBoardPage';
 import { KitPage } from '@/pages/KitPage';
 import { Character } from '@/shared/kit';
+import { SessionProvider } from '@/features/auth/session';
+import { AuthPage } from '@/features/auth/AuthPage';
+import { AccountMenu } from '@/features/auth/AccountMenu';
 
 function Shell({ mode }: { mode: Services['mode'] }) {
   return (
@@ -29,6 +32,7 @@ function Shell({ mode }: { mode: Services['mode'] }) {
             <NavLink to="/kit">Kit</NavLink>
           </nav>
           <ThemeMenu />
+          <AccountMenu />
         </div>
         <div className="app-header__row app-header__row--progress">
           <ProgressHeader />
@@ -44,6 +48,8 @@ function Shell({ mode }: { mode: Services['mode'] }) {
           <Route path="/chapters/:chapterId" element={<ChapterPage />} />
           <Route path="/traps" element={<TrapBoardPage />} />
           <Route path="/kit" element={<KitPage />} />
+          <Route path="/signin" element={<AuthPage mode="signin" />} />
+          <Route path="/signup" element={<AuthPage mode="signup" />} />
           <Route
             path="*"
             element={
@@ -65,9 +71,11 @@ export function App({ services }: { services: Services }) {
   return (
     <QueryClientProvider client={client}>
       <ServicesProvider value={services}>
-        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || undefined}>
-          <Shell mode={services.mode} />
-        </BrowserRouter>
+        <SessionProvider auth={services.auth} guestProgress={services.guestProgress}>
+          <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || undefined}>
+            <Shell mode={services.mode} />
+          </BrowserRouter>
+        </SessionProvider>
       </ServicesProvider>
     </QueryClientProvider>
   );
