@@ -40,7 +40,7 @@ export function QuestionList({ chapterId, questions }: { chapterId: string; ques
         const qs = questions.filter((q) => q.tier === tier.id);
         if (qs.length === 0) return null;
         return (
-          <section key={tier.id} className={`qz-tier qz-tier--${tier.id}`}>
+          <section key={tier.id} id={`tier-${tier.id}`} className={`qz-tier qz-tier--${tier.id}`}>
             <h3>
               {tier.title} <small>({qs.length})</small>
             </h3>

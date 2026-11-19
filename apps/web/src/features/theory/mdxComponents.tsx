@@ -4,6 +4,7 @@ import * as kit from '@/shared/kit';
 import { Badge, Callout } from '@/shared/ui';
 import { CodeBlock, OutputBlock } from '@/shared/ui/CodeBlock';
 import { Explain, Panel, Split } from '@/shared/ui/Split';
+import { slugify } from '@/shared/lib/slugify';
 import { RunnableCode } from '@/features/code-runner/RunnableCode';
 import { CollectionsPlayground } from './widgets/CollectionsPlayground';
 import { HashMathBoard } from './widgets/HashMathBoard';
@@ -23,11 +24,29 @@ function Pre({ children }: { children?: ReactNode }) {
 
 function CheatCard({ title = 'Cheat card', children }: { title?: string; children: ReactNode }) {
   return (
-    <section className="th-cheat">
+    <section className="th-cheat" id="cheat-card" data-outline="Cheat card">
       <div className="th-cheat__pin" aria-hidden="true" />
       <h3>{title}</h3>
       {children}
     </section>
+  );
+}
+
+/** Plain text of a heading's children (headings may contain `code`). */
+function textOf(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join('');
+  if (isValidElement(node)) return textOf((node as ReactElement<{ children?: ReactNode }>).props.children);
+  return '';
+}
+
+/** Section headings get a stable id and register themselves for the chapter outline (right-hand panel). */
+function H2({ children }: { children?: ReactNode }) {
+  const label = textOf(children);
+  return (
+    <h2 id={slugify(label)} data-outline={label}>
+      {children}
+    </h2>
   );
 }
 
@@ -41,6 +60,7 @@ function Hook({ children }: { children: ReactNode }) {
  */
 export const mdxComponents: MDXComponents = {
   pre: Pre,
+  h2: H2,
   table: (props) => (
     <div className="table-scroll">
       <table {...props} />

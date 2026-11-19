@@ -38,12 +38,17 @@ export interface TabDef {
   content: ReactNode;
 }
 
-/** Accessible tabs (roving arrow keys). */
-export function Tabs({ tabs, initial, onChange }: { tabs: TabDef[]; initial?: string; onChange?: (id: string) => void }) {
-  const [active, setActive] = useState(initial ?? tabs[0]?.id);
+/**
+ * Accessible tabs (roving arrow keys). Uncontrolled by default; pass `active` + `onChange` to control it.
+ * `keepMounted` renders every panel and only hides the inactive ones, so their state survives tab switches and
+ * their content (e.g. headings) is always in the DOM.
+ */
+export function Tabs({ tabs, initial, active: controlled, onChange, keepMounted = false }: { tabs: TabDef[]; initial?: string; active?: string; onChange?: (id: string) => void; keepMounted?: boolean }) {
+  const [own, setOwn] = useState(initial ?? tabs[0]?.id);
+  const active = controlled ?? own;
   const base = useId();
   const select = (id: string) => {
-    setActive(id);
+    setOwn(id);
     onChange?.(id);
   };
   return (
@@ -74,7 +79,7 @@ export function Tabs({ tabs, initial, onChange }: { tabs: TabDef[]; initial?: st
       </div>
       {tabs.map((t) => (
         <div key={t.id} role="tabpanel" id={`${base}-panel-${t.id}`} aria-labelledby={`${base}-tab-${t.id}`} hidden={active !== t.id} className="ui-tabs__panel">
-          {active === t.id && t.content}
+          {(keepMounted || active === t.id) && t.content}
         </div>
       ))}
     </div>
