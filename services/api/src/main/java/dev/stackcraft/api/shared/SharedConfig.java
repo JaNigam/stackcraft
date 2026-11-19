@@ -17,11 +17,6 @@ public class SharedConfig {
         return Clock.system(ZoneId.of(props.zone()));
     }
 
-    @Bean
-    CurrentLearner currentLearner() {
-        return CurrentLearner.LOCAL;
-    }
-
     /** CORS locked to the web origin(s); nothing else may call the api from a browser. */
     @Bean
     WebMvcConfigurer cors(StackcraftProperties props) {
@@ -30,8 +25,9 @@ public class SharedConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
                         .allowedOrigins(props.webOrigins().toArray(String[]::new))
-                        .allowedMethods("GET", "POST")
-                        .allowedHeaders("Content-Type", "X-Request-Id")
+                        .allowedMethods("GET", "POST", "PATCH")
+                        .allowedHeaders("Content-Type", "X-Request-Id", "X-XSRF-TOKEN")
+                        .allowCredentials(true)
                         .exposedHeaders("X-Request-Id")
                         .maxAge(3600);
             }

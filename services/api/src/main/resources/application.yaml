@@ -28,6 +28,11 @@ stackcraft:
     read-timeout: 15s
   web-origins: http://localhost:5173
   zone: UTC
+  # ADR 0004. STACKCRAFT_AUTH_JWT_PRIVATE_KEY (PKCS#8 PEM) is required in prod; dev generates a throwaway key.
+  auth:
+    access-ttl: 10m
+    refresh-ttl: 30d
+    secure-cookies: false
 
 management:
   endpoints:
@@ -67,6 +72,11 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/stackcraft}
     username: ${DATABASE_USER:stackcraft}
     password: ${DATABASE_PASSWORD:}
+stackcraft:
+  auth:
+    secure-cookies: true
+    # No default on purpose: prod refuses to start without a real signing key.
+    jwt-private-key: ${STACKCRAFT_AUTH_JWT_PRIVATE_KEY}
 logging:
   structured:
     format:

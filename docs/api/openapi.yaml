@@ -12,6 +12,8 @@ info:
     - Every write carries a client-generated `attemptId` (8-64 chars, letters, digits, '-'). Re-sending the same
       `attemptId` is safe: the response has `duplicate: true` and no XP is awarded twice.
     - Errors are RFC 9457 problem documents (`application/problem+json`) with a stable `type` URI.
+    - Auth (ADR 0004): content, runs and `/auth/*` are public. Progress, answers, `/me` and imports need the
+      `sc_access` cookie (401 `unauthenticated` otherwise). Every POST/PATCH needs `X-XSRF-TOKEN` (403 without).
 servers:
   - url: http://localhost:8080
 tags:
@@ -19,6 +21,7 @@ tags:
   - name: quiz
   - name: progress
   - name: execution
+  - name: identity
 
 paths:
   /api/v1/series:
@@ -204,7 +207,131 @@ paths:
                 required: [available]
                 properties: { available: { type: boolean } }
 
+  /api/v1/auth/register:
+    post:
+      tags: [identity]
+      operationId: register
+      description: Creates an account and signs it in (sets `sc_access` and `sc_refresh` cookies).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterBody' }
+      responses:
+        '201':
+          description: Account created and signed in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/auth/login:
+    post:
+      tags: [identity]
+      operationId: login
+      description: Signs in with email and password. One generic error for any wrong combination.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginBody' }
+      responses:
+        '200':
+          description: Signed in (cookies set)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/auth/refresh:
+    post:
+      tags: [identity]
+      operationId: refreshSession
+      description: Rotates the refresh token (cookie) and issues a new access token. Reusing an old refresh token revokes the whole session.
+      responses:
+        '200':
+          description: Session refreshed (cookies replaced)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/auth/logout:
+    post:
+      tags: [identity]
+      operationId: logout
+      description: Revokes this session and clears the cookies. Safe to call when already signed out.
+      responses:
+        '204': { description: Signed out }
+
+  /api/v1/auth/logout-all:
+    post:
+      tags: [identity]
+      operationId: logoutAll
+      description: Revokes every session of the signed-in user, on every device.
+      responses:
+        '204': { description: Signed out everywhere }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/me:
+    get:
+      tags: [identity]
+      operationId: getMe
+      responses:
+        '200':
+          description: The signed-in learner
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [identity]
+      operationId: updateMe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileUpdate' }
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /api/v1/progress/imports:
+    post:
+      tags: [progress]
+      operationId: importGuestProgress
+      description: |
+        Imports progress a guest earned in this browser, once, after signing in. XP is re-derived from the content
+        (client XP is ignored) and attempt ids dedupe, so sending the same import twice changes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GuestImport' }
+      responses:
+        '200':
+          description: What was imported
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportResult' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+
 components:
+  securitySchemes:
+    accessCookie:
+      type: apiKey
+      in: cookie
+      name: sc_access
+      description: Short-lived JWT set by /auth/login, /auth/register and /auth/refresh (ADR 0004). Writes also need the X-XSRF-TOKEN header echoing the XSRF-TOKEN cookie.
+
   parameters:
     SeriesId: { name: seriesId, in: path, required: true, schema: { type: string }, example: java-core }
     ChapterId: { name: chapterId, in: path, required: true, schema: { type: string }, example: java-core.u00.l01 }
@@ -436,6 +563,83 @@ components:
         dueOn: { type: string, format: date }
         xpAwarded: { type: integer }
         duplicate: { type: boolean }
+        progress: { $ref: '#/components/schemas/ProgressView' }
+
+    RegisterBody:
+      type: object
+      required: [email, password, displayName]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 10, maxLength: 128 }
+        displayName: { type: string, minLength: 2, maxLength: 32 }
+
+    LoginBody:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, maxLength: 254 }
+        password: { type: string, maxLength: 128 }
+
+    Me:
+      type: object
+      required: [id, email, displayName, leaderboardVisible]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        displayName: { type: string }
+        leaderboardVisible: { type: boolean }
+
+    ProfileUpdate:
+      type: object
+      properties:
+        displayName: { type: string, minLength: 2, maxLength: 32 }
+        leaderboardVisible: { type: boolean }
+
+    GuestEvent:
+      type: object
+      required: [attemptId, kind, chapterId, itemId, score, at]
+      properties:
+        attemptId: { type: string }
+        kind: { type: string, enum: [ANSWER, TEASER, CHAPTER, FLASHCARD] }
+        chapterId: { type: string }
+        itemId: { type: string }
+        score: { type: number, minimum: 0, maximum: 1 }
+        at: { type: string, format: date-time }
+
+    GuestTrap:
+      type: object
+      required: [chapterId, itemId, kind, prompt, timesFallen, lastFallenAt]
+      properties:
+        chapterId: { type: string }
+        itemId: { type: string }
+        kind: { type: string, enum: [question, teaser] }
+        prompt: { type: string, maxLength: 2000 }
+        timesFallen: { type: integer, minimum: 1 }
+        lastFallenAt: { type: string, format: date-time }
+
+    GuestCard:
+      type: object
+      required: [key, box, dueOn]
+      properties:
+        key: { type: string }
+        box: { type: integer, minimum: 1, maximum: 5 }
+        dueOn: { type: string, format: date }
+
+    GuestImport:
+      type: object
+      required: [events]
+      properties:
+        events: { type: array, maxItems: 2000, items: { $ref: '#/components/schemas/GuestEvent' } }
+        traps: { type: array, maxItems: 500, items: { $ref: '#/components/schemas/GuestTrap' } }
+        cards: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/GuestCard' } }
+
+    ImportResult:
+      type: object
+      required: [eventsImported, eventsSkipped, xpAwarded, progress]
+      properties:
+        eventsImported: { type: integer }
+        eventsSkipped: { type: integer, description: duplicates, unknown items or invalid timestamps }
+        xpAwarded: { type: integer }
         progress: { $ref: '#/components/schemas/ProgressView' }
 
     RunRequest:

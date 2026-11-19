@@ -5,6 +5,7 @@ import dev.stackcraft.api.progress.application.AwardXpUseCase;
 import dev.stackcraft.api.progress.application.CompleteChapterUseCase;
 import dev.stackcraft.api.progress.application.FlashcardsUseCase;
 import dev.stackcraft.api.progress.application.GetProgressUseCase;
+import dev.stackcraft.api.progress.application.ImportGuestProgressUseCase;
 import dev.stackcraft.api.progress.application.TrapBoardUseCase;
 import dev.stackcraft.api.progress.port.ProgressStore;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +34,11 @@ public class ProgressConfig {
     @Bean
     CompleteChapterUseCase completeChapterUseCase(ContentSource content, AwardXpUseCase awardXp) {
         return new CompleteChapterUseCase(content, awardXp);
+    }
+
+    @Bean
+    ImportGuestProgressUseCase importGuestProgressUseCase(ContentSource content, AwardXpUseCase awardXp, ProgressStore store, Clock clock) {
+        return new ImportGuestProgressUseCase(content, awardXp, store, store, clock);
     }
 
     @Bean

@@ -197,6 +197,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Creates an account and signs it in (sets `sc_access` and `sc_refresh` cookies). */
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Signs in with email and password. One generic error for any wrong combination. */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Rotates the refresh token (cookie) and issues a new access token. Reusing an old refresh token revokes the whole session. */
+        post: operations["refreshSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Revokes this session and clears the cookies. Safe to call when already signed out. */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Revokes every session of the signed-in user, on every device. */
+        post: operations["logoutAll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateMe"];
+        trace?: never;
+    };
+    "/api/v1/progress/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Imports progress a guest earned in this browser, once, after signing in. XP is re-derived from the content
+         *     (client XP is ignored) and attempt ids dedupe, so sending the same import twice changes nothing.
+         */
+        post: operations["importGuestProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -378,6 +499,65 @@ export interface components {
             dueOn: string;
             xpAwarded: number;
             duplicate: boolean;
+            progress: components["schemas"]["ProgressView"];
+        };
+        RegisterBody: {
+            /** Format: email */
+            email: string;
+            password: string;
+            displayName: string;
+        };
+        LoginBody: {
+            email: string;
+            password: string;
+        };
+        Me: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            displayName: string;
+            leaderboardVisible: boolean;
+        };
+        ProfileUpdate: {
+            displayName?: string;
+            leaderboardVisible?: boolean;
+        };
+        GuestEvent: {
+            attemptId: string;
+            /** @enum {string} */
+            kind: "ANSWER" | "TEASER" | "CHAPTER" | "FLASHCARD";
+            chapterId: string;
+            itemId: string;
+            score: number;
+            /** Format: date-time */
+            at: string;
+        };
+        GuestTrap: {
+            chapterId: string;
+            itemId: string;
+            /** @enum {string} */
+            kind: "question" | "teaser";
+            prompt: string;
+            timesFallen: number;
+            /** Format: date-time */
+            lastFallenAt: string;
+        };
+        GuestCard: {
+            key: string;
+            box: number;
+            /** Format: date */
+            dueOn: string;
+        };
+        GuestImport: {
+            events: components["schemas"]["GuestEvent"][];
+            traps?: components["schemas"]["GuestTrap"][];
+            cards?: components["schemas"]["GuestCard"][];
+        };
+        ImportResult: {
+            eventsImported: number;
+            /** @description duplicates */
+            eventsSkipped: number;
+            xpAwarded: number;
             progress: components["schemas"]["ProgressView"];
         };
         RunRequest: {
@@ -707,6 +887,189 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterBody"];
+            };
+        };
+        responses: {
+            /** @description Account created and signed in */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginBody"];
+            };
+        };
+        responses: {
+            /** @description Signed in (cookies set) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+        };
+    };
+    refreshSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Session refreshed (cookies replaced) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    logoutAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out everywhere */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    getMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The signed-in learner */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    updateMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+        };
+    };
+    importGuestProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuestImport"];
+            };
+        };
+        responses: {
+            /** @description What was imported */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
         };
     };
 }

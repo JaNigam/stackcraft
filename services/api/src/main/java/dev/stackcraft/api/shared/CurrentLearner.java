@@ -1,13 +1,12 @@
 package dev.stackcraft.api.shared;
 
 /**
- * Port: who is calling. v1 is single-learner ({@link #LOCAL}); the auth chapter swaps in a JWT-backed implementation
- * and no controller or use case changes.
+ * Port: who is calling. Implemented from the validated access token (identity.adapter.security, ADR 0004); use cases
+ * only ever see the learner id string, so they did not change when accounts arrived.
  */
 @FunctionalInterface
 public interface CurrentLearner {
 
-    CurrentLearner LOCAL = () -> "local";
-
+    /** @throws dev.stackcraft.api.identity.domain.IdentityException.Unauthenticated when nobody is signed in */
     String id();
 }
