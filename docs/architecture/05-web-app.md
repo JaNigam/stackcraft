@@ -68,6 +68,17 @@ custom properties on `<html>` and sets `data-scheme`; `ThemeMenu` lists the regi
 `Split` / `Explain` / `Panel`: text left, sticky interactive panel right, stacked under 1024 px. Page width up to
 1480 px with a fluid gutter; works down to 375 px with no page-level horizontal scroll.
 
+## Chapter outline
+
+`features/chapter-outline/` is the "where am I" panel on chapter pages: chapter progress (`chapterProgress`, a
+pure function of the chapter and the learner's best scores, XP-weighted) plus every section. Sections register
+themselves with a `data-outline` attribute (theory `h2`s get slug ids from `shared/lib/slugify`, the cheat card,
+the question tiers), and `useOutlineEntries` collects them from the DOM, so content authors add nothing. The chapter
+tabs stay mounted (`Tabs keepMounted`), which keeps every section discoverable and preserves widget state across
+tab switches. A scroll-spy highlights the current section; clicks switch tab and scroll in a layout effect, and the
+hash (`#theory/<slug>`, `#questions/tier-killer`) makes sections linkable. At 1200 px and up it is a sticky right
+column; below that it is a "Contents" button that opens the same panel as a sheet.
+
 ## Interview angle
 
 "How do you keep a React codebase from turning into a ball of mud?" Feature slices with a one-way import rule,
