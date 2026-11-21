@@ -1,0 +1,12 @@
+# DSA Patterns: interview questions grouped by the idea that cracks them. Units are patterns, in teaching order.
+id: dsa
+title: DSA Patterns
+tagline: Interview questions grouped by the one idea that cracks them. Watch the algorithm move, run it, then solve it yourself.
+units:
+  - id: u01
+    number: 1
+    dir: u01-two-pointers
+    title: Two pointers
+    summary: Sort, then walk two indexes toward each other. Turns O(n²) pair searches into O(n), and O(n³) triplets into O(n²).
+    chapters:
+      - l01-three-sum

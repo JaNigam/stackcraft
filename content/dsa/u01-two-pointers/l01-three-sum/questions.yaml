@@ -1,0 +1,240 @@
+# Question bank. Every `predict` program is compiled and run by scripts/verify-content.mjs and must print `expected`.
+questions:
+  # ---------- Warm-up ----------
+  - id: w1
+    tier: warmup
+    type: mcq
+    prompt: What is the time complexity of "sort, then two pointers for every captain"?
+    options: ["O(n log n)", "O(n²)", "O(n² log n)", "O(n³)"]
+    answer: 1
+    explanation: Sorting is O(n log n); each of the n captains runs an O(n) two-pointer walk, so O(n²) dominates.
+
+  - id: w2
+    tier: warmup
+    type: mcq
+    prompt: Why do we sort before running the two pointers?
+    options:
+      - "So the output comes out sorted"
+      - "So 'too small, move left; too big, move right' is a valid rule, and equal numbers sit side by side"
+      - "Because HashMap needs sorted keys"
+      - "To make it O(n)"
+    answer: 1
+    explanation: The pointer moves are only safe on sorted data (moving left can only increase the sum). Sorting also groups duplicates, which makes skipping them a one-line check.
+
+  - id: w3
+    tier: warmup
+    type: mcq
+    prompt: Once you fix the captain nums[i], which problem is left to solve?
+    options:
+      - "Binary search for -nums[i]"
+      - "Two Sum II: two numbers in the sorted rest that add up to -nums[i]"
+      - "Longest increasing subsequence"
+      - "Sliding window of size 2"
+    answer: 1
+    explanation: 3Sum is Two Sum II once per captain, with target -nums[i], solved with two pointers in O(n).
+
+  - id: w4
+    tier: warmup
+    type: mcq
+    prompt: "The current sum is -3 (too small). Which pointer moves?"
+    options: ["right moves left", "left moves right", "both move", "the captain moves"]
+    answer: 1
+    explanation: Only a bigger number can raise the sum, and the bigger numbers are to the right of left. Moving right left would make it smaller still.
+
+  - id: w5
+    tier: warmup
+    type: mcq
+    prompt: Why does the captain loop stop at i < nums.length - 2?
+    options:
+      - "To avoid an infinite loop"
+      - "A captain needs two numbers after it, so the last two positions can never be captains"
+      - "Because the last two numbers are always positive"
+      - "It is an arbitrary micro-optimisation"
+    answer: 1
+    explanation: left starts at i + 1 and right at the end, and they must be different positions, so the last valid captain index is length - 3.
+
+  # ---------- Interview ----------
+  - id: i1
+    tier: interview
+    type: predict
+    prompt: This version looks ahead to skip duplicate captains. What does it print?
+    code: |
+      import java.util.*;
+
+      public class NextNotPrevious {
+          public static void main(String[] args) {
+              int[] a = {-1, 0, 1, 2, -1, -4};
+              Arrays.sort(a);
+              List<List<Integer>> result = new ArrayList<>();
+              for (int i = 0; i < a.length - 2; i++) {
+                  if (i + 1 < a.length && a[i] == a[i + 1]) continue; // bug: looks ahead, not back
+                  int left = i + 1, right = a.length - 1;
+                  while (left < right) {
+                      int sum = a[i] + a[left] + a[right];
+                      if (sum == 0) {
+                          result.add(List.of(a[i], a[left], a[right]));
+                          left++;
+                          right--;
+                          while (left < right && a[left] == a[left - 1]) left++;
+                          while (left < right && a[right] == a[right + 1]) right--;
+                      } else if (sum < 0) left++;
+                      else right--;
+                  }
+              }
+              System.out.println(result);
+          }
+      }
+    expected: |
+      [[-1, 0, 1]]
+    explanation: Looking ahead skips the first -1 in [-4, -1, -1, 0, 1, 2], so the team [-1, -1, 2] (which needs both -1s) is never formed. Compare with the previous element to keep the first occurrence.
+
+  - id: i2
+    tier: interview
+    type: predict
+    prompt: This version forgets to skip equal neighbours after a hit. What does it print?
+    code: |
+      import java.util.*;
+
+      public class NoInnerSkip {
+          public static void main(String[] args) {
+              int[] a = {-2, 0, 0, 2, 2};
+              Arrays.sort(a);
+              List<List<Integer>> result = new ArrayList<>();
+              for (int i = 0; i < a.length - 2; i++) {
+                  if (i > 0 && a[i] == a[i - 1]) continue;
+                  int left = i + 1, right = a.length - 1;
+                  while (left < right) {
+                      int sum = a[i] + a[left] + a[right];
+                      if (sum == 0) {
+                          result.add(List.of(a[i], a[left], a[right]));
+                          left++;
+                          right--; // bug: no skipping of equal neighbours after a hit
+                      } else if (sum < 0) left++;
+                      else right--;
+                  }
+              }
+              System.out.println(result);
+              System.out.println(result.size());
+          }
+      }
+    expected: |
+      [[-2, 0, 2], [-2, 0, 2]]
+      2
+    explanation: After the first hit the pointers land on the second 0 and the first 2, which form the same team again. The two while loops after a hit are what prevent this.
+
+  - id: i3
+    tier: interview
+    type: predict
+    prompt: "Does Arrays.sort change the array you pass it? What prints?"
+    code: |
+      import java.util.*;
+
+      public class SortInPlace {
+          public static void main(String[] args) {
+              int[] nums = {-1, 0, 1, 2, -1, -4};
+              int[] copy = nums.clone();
+              Arrays.sort(copy);
+              System.out.println(Arrays.toString(nums));
+              Arrays.sort(nums);
+              System.out.println(Arrays.toString(nums));
+          }
+      }
+    expected: |
+      [-1, 0, 1, 2, -1, -4]
+      [-4, -1, -1, 0, 1, 2]
+    explanation: Sorting the clone leaves nums alone; Arrays.sort(nums) sorts in place. If the caller needs the original order, sort a copy and say so in the interview.
+
+  - id: i4
+    tier: interview
+    type: short
+    prompt: "The interviewer asks: how do you make sure no triplet appears twice, without using a Set?"
+    modelAnswer: |
+      Sort first, so equal values are adjacent. Duplicates can only come from two places. First, two equal captains
+      would produce the same teams, so I skip a captain equal to the **previous** one (`i > 0 && a[i] == a[i - 1]`);
+      comparing with the previous keeps the first occurrence, which still sees every option. Second, after a hit, equal
+      neighbours would form the same team again, so after moving both pointers I advance `left` while it equals the
+      value just used and move `right` back while it equals the value just used. That keeps the output unique with
+      O(1) extra space.
+    keyPoints:
+      - Sorting groups equal values
+      - Captain guard compares with the previous element, and why not the next
+      - After a hit, skip equal neighbours on both sides
+      - No Set needed, O(1) extra space
+
+  - id: i5
+    tier: interview
+    type: short
+    prompt: Walk through the time and space complexity, including what you would tell the interviewer about the input array.
+    modelAnswer: |
+      Sorting is O(n log n). Then for each of up to n captains, the two pointers together move at most n steps, so the
+      scan is O(n²), which dominates: O(n²) overall. Extra space is O(1) besides the output and whatever the sort uses
+      (Java's dual-pivot quicksort for int arrays is in place, O(log n) stack). Sorting in place mutates the caller's
+      array, so I would mention that and offer to sort a copy, which costs O(n) extra.
+    keyPoints:
+      - O(n log n) sort + O(n²) scan = O(n²)
+      - O(1) extra besides output (and the sort's stack)
+      - Mention the input is mutated; copying costs O(n)
+
+  # ---------- Killer ----------
+  - id: k1
+    tier: killer
+    type: problem
+    prompt: "Extend the idea to 4Sum: return every unique quadruplet that sums to a target. What is the complexity, and where do duplicates need handling now?"
+    hints:
+      - 3Sum was "fix one number, then Two Sum II". What would you fix for 4Sum?
+      - Two nested loops for the first two numbers, then two pointers for the last two.
+      - Each of the two outer loops needs its own "skip equal to previous" guard, and the sum can overflow an int.
+    modelAnswer: |
+      Sort, then loop `i` over the first number and `j > i` over the second, and run two pointers on the rest for
+      target - a[i] - a[j]. That is O(n³) time. Duplicates need guarding at every level: skip `a[i] == a[i - 1]`,
+      skip `a[j] == a[j - 1]` when `j > i + 1`, and skip equal neighbours after a hit. Use `long` for the sum, because
+      four ints near the limits can overflow. The general pattern is kSum: recurse down to 2Sum with two pointers,
+      O(n^(k-1)).
+
+  - id: k2
+    tier: killer
+    type: problem
+    prompt: "3Sum Closest: return the sum of the triplet closest to a target (one answer, no list). How does the algorithm change?"
+    hints:
+      - The sort and the captain loop stay the same.
+      - Instead of looking for zero, track the best |sum - target| seen so far.
+      - The pointer rule is still "too small, move left; too big, move right"; exact match returns immediately.
+    modelAnswer: |
+      Same skeleton: sort, captain loop, two pointers. Keep `best` (start with the first three numbers' sum). At each
+      step compute `sum`; if `|sum - target| < |best - target|`, update best. If `sum < target` move left right, if
+      bigger move right left, and if equal return target at once. Duplicate skipping is optional here (it only speeds
+      things up), because we return one number, not a list. O(n²) time, O(1) space.
+
+  - id: k3
+    tier: killer
+    type: problem
+    prompt: "3Sum Smaller: count triplets i < j < k with nums[i] + nums[j] + nums[k] < target, in O(n²). For [-2, 0, 1, 3] and target 2 the answer is 2. What is the counting trick?"
+    hints:
+      - Sorting is still allowed, because the answer is a count, not positions.
+      - When the sum with left and right is already below target, what about every index between left and right?
+      - Add right - left in one go, then move left.
+    modelAnswer: |
+      Sort, fix the captain, and run two pointers. If `a[i] + a[left] + a[right] < target`, then every `right'` in
+      `(left, right]` also works (they are smaller or equal), so add `right - left` to the count and move `left`
+      right. Otherwise move `right` left. Each captain is O(n), so O(n²) overall. For `[-2, 0, 1, 3]`, target 2: the
+      captain -2 with left 0, right 3 sums to 1 (under 2), adding 2 triplets; nothing else qualifies, so the answer is 2.
+
+flashcards:
+  - id: f1
+    front: 3Sum in one sentence?
+    back: Sort, fix a captain, then Two Sum II with two pointers on the rest; O(n²).
+  - id: f2
+    front: How do you skip duplicate captains, and why previous not next?
+    back: "if (i > 0 && a[i] == a[i - 1]) continue; looking at the previous keeps the first occurrence, which sees the most options."
+  - id: f3
+    front: What do you do right after recording a triplet?
+    back: Move both pointers, then skip equal neighbours on both sides.
+  - id: f4
+    front: When can the captain loop stop early?
+    back: When the captain is positive; everything after it is bigger, so nothing sums to 0.
+  - id: f5
+    front: Does Arrays.sort mutate its argument?
+    back: Yes, in place (returns void). Sort a clone if the caller needs the original order.
+  - id: f6
+    front: Complexity of kSum with this pattern?
+    back: O(n^(k-1)), recursing down to two pointers; 3Sum O(n²), 4Sum O(n³).

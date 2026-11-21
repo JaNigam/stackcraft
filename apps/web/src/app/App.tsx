@@ -28,6 +28,7 @@ function Shell({ mode }: { mode: Services['mode'] }) {
           </Link>
           <nav className="app-nav" aria-label="Main">
             <NavLink to="/series/java-core">Java Core</NavLink>
+            <NavLink to="/series/dsa">DSA</NavLink>
             <NavLink to="/traps">Trap Board</NavLink>
             <NavLink to="/kit">Kit</NavLink>
           </nav>

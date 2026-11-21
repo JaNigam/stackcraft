@@ -1,0 +1,23 @@
+== trace for [-1, 0, 1, 2, -1, -4]
+sorted [-4, -1, -1, 0, 1, 2]
+captain i=0 (-4)
+  L=1(-1) R=5(2) sum=-3 -> too small, left++
+  L=2(-1) R=5(2) sum=-3 -> too small, left++
+  L=3(0) R=5(2) sum=-2 -> too small, left++
+  L=4(1) R=5(2) sum=-1 -> too small, left++
+captain i=1 (-1)
+  L=2(-1) R=5(2) sum=0 -> found [-1, -1, 2]
+  L=3(0) R=4(1) sum=0 -> found [-1, 0, 1]
+captain i=2 (-1) same as previous captain -> skip
+captain i=3 (0)
+  L=4(1) R=5(2) sum=3 -> too big, right--
+result [[-1, -1, 2], [-1, 0, 1]]
+== more inputs
+[0, 0, 0] -> [[0, 0, 0]]
+[0, 0, 0, 0] -> [[0, 0, 0]]
+[0, 1, 1] -> []
+[] -> []
+[-2, 0, 0, 2, 2] -> [[-2, 0, 2]]
+[3, -2, 1, 0] -> []
+caller's array untouched: [-1, 0, 1, 2, -1, -4]
+random check: 2000 / 2000 match brute force, no duplicate triplets
