@@ -1,0 +1,49 @@
+# Commit before the reveal. Reveals quote code/ContainerWithMostWater.out or snippets verified by running them.
+teasers:
+  - id: t1
+    prompt: Two walls of heights 3 and 8 stand 5 apart. How much water does the container hold?
+    options: ["40", "15", "55", "24"]
+    answer: 1
+    reveal: |
+      **15**. The water spills over the **shorter** wall, so the level is 3, and 3 × 5 = 15. Using the taller wall
+      (8 × 5 = 40) is the most common slip.
+
+  - id: t2
+    prompt: The left wall is shorter than the right wall. Which pointer should move?
+    options:
+      - "right: the taller wall is wasting space"
+      - "left: every narrower container using it is no better"
+      - "both, to save time"
+      - "whichever is closer to the middle"
+    answer: 1
+    reveal: |
+      **left**. Any unmeasured container that keeps the left wall is narrower than this one and its level is still
+      capped by the left wall, so it can't beat what we just measured. The left wall has nothing left to offer.
+
+  - id: t3
+    prompt: You move the TALLER wall instead. What does [1, 8, 6, 2, 5, 4, 8, 3, 7] return?
+    options: ["49", "8", "40", "0"]
+    answer: 1
+    reveal: |
+      **8**. The first container (walls 1 and 7, level 1) gives 8. Moving the taller wall keeps the short 1 forever,
+      so every later container is capped at level 1 and only gets narrower. The real best, 49, is never seen.
+
+  - id: t4
+    prompt: "[4, 3, 2, 1, 4]: what is the most water?"
+    options: ["4", "12", "16", "9"]
+    answer: 2
+    reveal: |
+      **16**: the two 4s at the ends, level 4, width 4. The demo prints `[4, 3, 2, 1, 4] -> 16`. The widest
+      container is often the answer when the end walls are tall.
+
+  - id: t5
+    prompt: In Container With Most Water, does a tall wall between the two chosen walls block any water?
+    options:
+      - "Yes, it splits the container in two"
+      - "No: only the two chosen walls count; the ones between are ignored"
+      - "Only if it is taller than both"
+      - "It adds its own height to the area"
+    answer: 1
+    reveal: |
+      **No.** This problem only looks at the two walls you pick, as if the ones in between were thin lines. If the
+      walls in between did matter, it would be a different problem: **Trapping Rain Water**, the next chapter.

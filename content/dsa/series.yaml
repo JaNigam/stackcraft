@@ -10,3 +10,5 @@ units:
     summary: Sort, then walk two indexes toward each other. Turns O(n²) pair searches into O(n), and O(n³) triplets into O(n²).
     chapters:
       - l01-three-sum
+      - l02-container-with-most-water
+      - l03-trapping-rain-water

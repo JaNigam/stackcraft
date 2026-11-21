@@ -1,0 +1,14 @@
+id: dsa.u01.l02
+lesson: 2
+title: Container With Most Water
+subtitle: Start with the widest container, then always discard the shorter wall
+minutes: 25
+completionXp: 10
+whereAsked:
+  - Blind 75 (Medium), LeetCode 11
+  - FAANG phone screens; the follow-up is always "prove that moving the shorter wall is safe"
+  - The warm-up interviewers use before Trapping Rain Water
+prerequisites:
+  - dsa.u01.l01
+codeFiles:
+  - ContainerWithMostWater.java
