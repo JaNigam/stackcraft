@@ -1,8 +1,9 @@
 import { Link } from 'react-router';
 import { useSeriesList } from '@/entities/chapter/hooks';
 import { WarmupDeck } from '@/features/flashcards/WarmupDeck';
-import { Actor, Scene } from '@/shared/kit';
+import { Character } from '@/shared/kit';
 import { Badge, ErrorNote, Spinner } from '@/shared/ui';
+import { learningLoop, tracks } from './homeTour';
 
 const upcoming = ['LLD', 'HLD', 'Cloud'];
 
@@ -14,12 +15,41 @@ export function HomePage() {
         <h1>
           Craft your stack, <span className="home-hero__hl">one internal at a time.</span>
         </h1>
-        <p>Cartoon intuition first, exact internals second, then you prove it: predict the output, run the real JVM, answer like it is the interview.</p>
-        <Scene label="Meet the cast">
-          <Actor kind="list" label="ArrayList" says="I keep everything, in order." />
-          <Actor kind="set" mood="nope" label="HashSet" says="Duplicates? Not on my list." />
-          <Actor kind="map" mood="smug" label="HashMap" says="Give me a key, I give you a value." />
-        </Scene>
+        <p className="home-hero__lead">
+          Stackcraft gets you ready for senior Java interviews. You learn how things really work inside, solve the
+          problems interviewers ask, and practise saying the answer out loud.
+        </p>
+        <ul className="home-tracks" aria-label="What you can learn">
+          {tracks.map((t) => (
+            <li key={t.label}>
+              <Badge tone={t.ready ? t.tone : 'lavender'}>{t.ready ? t.label : `${t.label} · soon`}</Badge>
+            </li>
+          ))}
+        </ul>
+        <div className="home-hero__cta">
+          <Link to="/series/java-core" className="ui-btn ui-btn--primary">
+            Start with Java Core
+          </Link>
+          <Link to="/series/dsa" className="ui-btn ui-btn--default">
+            Practise DSA patterns
+          </Link>
+        </div>
+      </section>
+
+      <section className="home-loop" aria-labelledby="loop-h">
+        <h2 id="loop-h">How every chapter works</h2>
+        <ol className="home-loop__steps">
+          {learningLoop.map((s, i) => (
+            <li key={s.title} className="ui-card home-loop__step">
+              <span className="home-loop__num" aria-hidden="true">
+                {i + 1}
+              </span>
+              <Character kind={s.kind} mood={s.mood} size={84} />
+              <h3>{s.title}</h3>
+              <p>{s.says}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <div className="home-grid">
