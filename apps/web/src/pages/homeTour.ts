@@ -1,50 +1,53 @@
-import type { CharacterKind, Mood } from '@/shared/kit';
+import type { CharacterKind } from '@/shared/kit';
 
-/** What Stackcraft teaches, told by the Kit's characters. Pure data so the home page stays a layout. */
-export interface TourStep {
-  kind: CharacterKind;
-  mood: Mood;
+/** Home page copy as data, so the page stays a layout and the curriculum is easy to update. */
+export interface Track {
   title: string;
-  says: string;
+  /** Series id when it has chapters; undefined while it is still being written. */
+  seriesId?: string;
+  kind: CharacterKind;
+  summary: string;
+  topics: string[];
 }
 
-export const learningLoop: TourStep[] = [
+export const curriculum: Track[] = [
   {
-    kind: 'blob',
-    mood: 'happy',
-    title: 'See it',
-    says: 'Every idea starts as a cartoon, so you get the picture before the details.',
+    title: 'Java Core',
+    seriesId: 'java-core',
+    kind: 'list',
+    summary: 'How the language and the JVM behave under the hood.',
+    topics: ['Collections and hashing', 'Memory: stack, heap, GC', 'Strings, OOP and generics', 'Streams and concurrency'],
   },
   {
-    kind: 'tree',
-    mood: 'smug',
-    title: 'Open it up',
-    says: 'Then the exact internals on a chalkboard: real source, real numbers.',
-  },
-  {
+    title: 'DSA Patterns',
+    seriesId: 'dsa',
     kind: 'queue',
-    mood: 'surprised',
-    title: 'Predict, then run',
-    says: 'Guess the output, then run it on a real JVM. Every number here comes from a real run.',
+    summary: 'Interview problems grouped by the idea that solves them.',
+    topics: ['Two pointers', 'Sliding window', 'Binary search', 'Trees, graphs and DP'],
   },
   {
+    title: 'Low-level design',
+    kind: 'tree',
+    summary: 'Clean object design, taught on this codebase.',
+    topics: ['SOLID in practice', 'Design patterns', 'Ports and adapters', 'Machine-coding rounds'],
+  },
+  {
+    title: 'High-level design',
     kind: 'map',
-    mood: 'smug',
-    title: 'Answer like the interview',
-    says: 'Questions from warm-up to killer, with the answer an interviewer wants to hear.',
+    summary: 'System design, starting from how Stackcraft is built.',
+    topics: ['Service boundaries and APIs', 'Caching and queues', 'Data stores and scaling', 'Security and sandboxing'],
   },
   {
+    title: 'Cloud',
     kind: 'set',
-    mood: 'nope',
-    title: 'Keep your traps',
-    says: 'Got one wrong? It goes on your Trap Board, and flashcards bring it back when it is due.',
+    summary: 'Ship it: the series ends with Stackcraft deployed.',
+    topics: ['Containers', 'CI/CD pipelines', 'Kubernetes and Terraform', 'Observability'],
   },
 ];
 
-export const tracks: { label: string; tone: 'mint' | 'lavender' | 'pink' | 'amber' | 'sky'; ready: boolean }[] = [
-  { label: 'Java Core', tone: 'mint', ready: true },
-  { label: 'DSA Patterns', tone: 'sky', ready: true },
-  { label: 'LLD', tone: 'lavender', ready: false },
-  { label: 'HLD', tone: 'amber', ready: false },
-  { label: 'Cloud', tone: 'pink', ready: false },
+export const method: { title: string; body: string }[] = [
+  { title: 'Concept', body: 'A short explanation with diagrams, before any detail.' },
+  { title: 'Internals', body: 'The real source and the real numbers behind it.' },
+  { title: 'Run the code', body: 'Predict the output, then run it on a real JVM.' },
+  { title: 'Interview practice', body: 'Graded questions, model answers and spaced review.' },
 ];
