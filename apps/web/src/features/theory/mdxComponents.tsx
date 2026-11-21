@@ -10,6 +10,7 @@ import { CollectionsPlayground } from './widgets/CollectionsPlayground';
 import { HashMathBoard } from './widgets/HashMathBoard';
 import { CollectionsFamilyTree } from './widgets/CollectionsFamilyTree';
 import { CollectionPicker } from './widgets/CollectionPicker';
+import { ThreeSumPlayground } from './widgets/ThreeSumPlayground';
 
 /** Fenced ```java blocks arrive as <pre><code className="language-java">…</code></pre>. */
 function Pre({ children }: { children?: ReactNode }) {
@@ -91,4 +92,5 @@ export const mdxComponents: MDXComponents = {
   HashMathBoard,
   CollectionsFamilyTree,
   CollectionPicker,
+  ThreeSumPlayground,
 };

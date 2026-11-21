@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router';
 import { useReducedMotion } from 'framer-motion';
-import { useChapter } from '@/entities/chapter/hooks';
+import { useChapter, useSeries } from '@/entities/chapter/hooks';
 import { TheoryView } from '@/features/theory/TheoryView';
 import { TeaserList } from '@/features/teasers/TeaserList';
 import { QuestionList } from '@/features/quiz/QuestionList';
@@ -34,6 +34,7 @@ function parseHash(hash: string): { tab: ChapterTab; id?: string } | null {
 function ChapterBody({ c }: { c: ChapterView }) {
   const m = c.meta;
   const unitNum = Number(m.unitId.replace(/\D/g, ''));
+  const seriesTitle = useSeries(m.seriesId).data?.title ?? 'Series';
   const [tab, setTab] = useState<ChapterTab>(() => parseHash(location.hash)?.tab ?? 'theory');
   const [jump, setJump] = useState<{ id?: string; smooth: boolean; n: number }>(() => ({ id: parseHash(location.hash)?.id, smooth: false, n: 0 }));
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -81,7 +82,7 @@ function ChapterBody({ c }: { c: ChapterView }) {
     <div className="chapter chapter--with-outline">
       <div className="chapter__main">
         <nav className="chapter__crumbs" aria-label="Breadcrumb">
-          <Link to={`/series/${m.seriesId}`}>Java Core</Link> <span aria-hidden="true">›</span> Unit {unitNum}
+          <Link to={`/series/${m.seriesId}`}>{seriesTitle}</Link> <span aria-hidden="true">›</span> Unit {unitNum}
         </nav>
         <header className="chapter__head">
           <span className="chapter__lesson">

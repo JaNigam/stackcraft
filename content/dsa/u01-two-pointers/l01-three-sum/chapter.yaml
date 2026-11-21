@@ -1,0 +1,13 @@
+id: dsa.u01.l01
+lesson: 1
+title: 3Sum
+subtitle: Sort, fix a captain, then run two pointers on the rest
+minutes: 30
+completionXp: 10
+whereAsked:
+  - Blind 75 (Medium), LeetCode 15
+  - FAANG and fintech phone screens, usually right after Two Sum II
+  - The "how do you avoid duplicates?" follow-up is what separates a pass from a strong pass
+prerequisites: []
+codeFiles:
+  - ThreeSum.java

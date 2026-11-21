@@ -4,7 +4,7 @@ import { WarmupDeck } from '@/features/flashcards/WarmupDeck';
 import { Actor, Scene } from '@/shared/kit';
 import { Badge, ErrorNote, Spinner } from '@/shared/ui';
 
-const upcoming = ['DSA', 'LLD', 'HLD', 'Cloud'];
+const upcoming = ['LLD', 'HLD', 'Cloud'];
 
 export function HomePage() {
   const series = useSeriesList();

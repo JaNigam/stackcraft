@@ -1,0 +1,70 @@
+# Commit before the reveal. Every reveal quotes code/ThreeSum.out or a snippet verified by running it.
+teasers:
+  - id: t1
+    prompt: The input is [0, 0, 0, 0]. How many triplets does 3Sum return?
+    options:
+      - "1"
+      - "4 (one per way to leave out a zero)"
+      - "0, because the numbers repeat"
+      - "6"
+    answer: 0
+    reveal: |
+      **One**: `[[0, 0, 0]]`. There are four ways to *pick* three zeros, but they are all the same team, and the
+      question asks for unique triplets. The captain guard skips the repeated zero captains, and the hit guard skips
+      the repeated zero walkers. The demo prints `[0, 0, 0, 0] -> [[0, 0, 0]]`.
+
+  - id: t2
+    prompt: You compare a captain with the NEXT number (a[i] == a[i + 1]) instead of the previous one. On [-1, 0, 1, 2, -1, -4], what is returned?
+    options:
+      - "[[-1, -1, 2], [-1, 0, 1]] (no change)"
+      - "[[-1, 0, 1]]"
+      - "[[-1, -1, 2]]"
+      - "[] (nothing)"
+    answer: 1
+    reveal: |
+      `[[-1, 0, 1]]`. Sorted, the array is `[-4, -1, -1, 0, 1, 2]`. Looking *ahead* skips the **first** -1, so the
+      only -1 left as captain is the second one, and the team that needs both -1s (`[-1, -1, 2]`) can no longer be
+      formed. Comparing with the *previous* one keeps the first occurrence, which sees the most options.
+
+  - id: t3
+    prompt: The captain is positive (nums[i] > 0 after sorting). What should the loop do?
+    options:
+      - "Skip this captain and try the next one"
+      - "Stop: no later captain can work either"
+      - "Move the right pointer left"
+      - "Nothing special"
+    answer: 1
+    reveal: |
+      **Stop.** The array is sorted, so the captain and everything after it are positive, and three positives never
+      sum to 0. `break` saves all the remaining work. It is an optimisation, not a correctness fix: without it the
+      answer is the same, just slower.
+
+  - id: t4
+    prompt: You call Arrays.sort(nums) directly on the caller's array. What does the caller see afterwards?
+    code: |
+      int[] nums = {-1, 0, 1, 2, -1, -4};
+      Arrays.sort(nums);
+      System.out.println(Arrays.toString(nums));
+    options:
+      - "[-1, 0, 1, 2, -1, -4]: Arrays.sort returns a new array"
+      - "[-4, -1, -1, 0, 1, 2]: the array is sorted in place"
+      - "It throws: the array is final"
+      - "It depends on the JVM"
+    answer: 1
+    reveal: |
+      `[-4, -1, -1, 0, 1, 2]`. `Arrays.sort` sorts **in place** and returns `void`. If the caller still needs the
+      original order, sort a copy (`nums.clone()`); the demo does exactly that and prints
+      `caller's array untouched: [-1, 0, 1, 2, -1, -4]`. Say this out loud in an interview: it shows you think about
+      side effects.
+
+  - id: t5
+    prompt: After finding a team, you move both pointers but forget to skip equal neighbours. What does [-2, 0, 0, 2, 2] return?
+    options:
+      - "[[-2, 0, 2]]"
+      - "[[-2, 0, 2], [-2, 0, 2]]"
+      - "[[-2, 0, 2], [0, 0, 2]]"
+      - "It loops forever"
+    answer: 1
+    reveal: |
+      `[[-2, 0, 2], [-2, 0, 2]]`: the same team twice. After the first hit the pointers land on the second 0 and the
+      first 2, which make the same team again. The fix is the two `while` loops that step past equal neighbours.

@@ -1,0 +1,221 @@
+{/* DSA 1.1 theory. Every number below is quoted from code/ThreeSum.out (verify-content re-runs it), or computed by
+    the playground's step generator, which is tested line by line against that same trace. */}
+
+<Split ratio="wide-text">
+<Explain>
+
+<Hook>
+"Given an array, return every triplet that sums to zero, with no duplicate triplets." It looks like Two Sum with one
+more number. The interviewer is really testing two things: whether you can turn O(n³) into O(n²) with a known
+pattern, and whether you can kill duplicates cleanly instead of patching them with a set.
+</Hook>
+
+## The picture: a captain and two walkers
+
+Line everyone up by score, lowest to highest. Pick one person as the **captain**. Now you only need two more people
+whose scores cancel the captain's. Put one walker at each end of the rest of the line and walk inward:
+
+- total **too small**: only a bigger number helps, so the **left** walker steps right;
+- total **too big**: only a smaller number helps, so the **right** walker steps left;
+- total **zero**: write the team down, and both walkers step in.
+
+Every step rules out one person for this captain for good, which is why you never try every pair. That inner walk
+is exactly Two Sum II (sorted array, two pointers). So 3Sum is "Two Sum II, once per captain".
+
+</Explain>
+<Panel>
+
+<Scene label="Captain and walkers">
+  <Actor kind="map" mood="smug" label="Captain" says="I am -1. Find me two numbers that add up to +1." />
+  <Actor kind="list" label="Left walker" says="Too small? I step right, to a bigger number." />
+  <Actor kind="queue" label="Right walker" says="Too big? I step left, to a smaller number." />
+</Scene>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Watch it run
+
+Press **Next** and follow the tags: **C** is the captain, **L** and **R** are the walkers. Grey tiles on the left are
+captains already used up. The dark strip under the stage prints the same line the Java program prints for that step.
+
+On the example `[-1, 0, 1, 2, -1, -4]` the run needs **7 sum checks**, while brute force would try all
+**20** triples of 6 numbers. The gap grows fast: try the **Bigger** preset.
+
+Then try **Duplicates** (`[-2, 0, 0, 2, 2]`). There are four ways to pick -2, a 0 and a 2, but only one *team*,
+and the algorithm records it once.
+
+</Explain>
+<Panel>
+
+<ThreeSumPlayground />
+
+</Panel>
+</Split>
+
+<Split>
+<Explain>
+
+## From O(n³) to O(n²)
+
+**Brute force:** three nested loops try every triple: n·(n-1)·(n-2)/6 of them, so O(n³). Easy to get right, which is
+why our demo keeps it as a *referee* to check the fast version.
+
+**The idea:**
+
+1. **Sort**: O(n log n). Sorting is what makes "too small, move left" meaningful, and it puts equal numbers next to
+   each other, which is what makes duplicates easy to skip.
+2. **For each captain**, two pointers over the rest: O(n) per captain.
+3. Total: O(n log n) + O(n · n) = **O(n²)**.
+
+Extra space is O(1) beyond the sort and the output, if you are allowed to sort the input. If not, sort a copy: O(n).
+
+</Explain>
+<Panel>
+
+| Approach | Time | Extra space | When |
+|---|---|---|---|
+| Three loops | O(n³) | O(1) + output | only as a referee for tests |
+| Hash set per pair | O(n²) | O(n) | works, but duplicates are awkward |
+| **Sort + two pointers** | **O(n²)** | O(1) + sort | the answer interviewers expect |
+
+<Callout kind="interview">
+"Sort, fix the first number, then it is Two Sum II on the rest with two pointers. That is O(n²) time and O(1) extra
+space besides the sort. Duplicates: skip a captain equal to the previous one, and after a hit skip equal neighbours."
+</Callout>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Run it: the code, piece by piece
+
+The program on the right is the one the playground mirrors. Run it, then read it in this order:
+
+**1. Sort a copy.** `nums.clone()` then `Arrays.sort`. Sorting in place would change the caller's array, which the
+demo checks:
+
+```output
+caller's array untouched: [-1, 0, 1, 2, -1, -4]
+```
+
+**2. Loop captains up to `length - 2`.** A captain needs two numbers after it.
+
+**3. Stop at a positive captain.** Everything after it is bigger, so no sum can reach 0.
+
+**4. Skip a repeated captain:** `if (i > 0 && a[i] == a[i - 1]) continue;` (the `i > 0` guard stops a read of index
+-1). In the trace, the second -1 is skipped:
+
+```output
+captain i=2 (-1) same as previous captain -> skip
+```
+
+**5. Two pointers:** `left = i + 1`, `right = a.length - 1`, and move one of them per check. The first captain never
+finds a team; the left walker just runs into the right one:
+
+```output
+captain i=0 (-4)
+  L=1(-1) R=5(2) sum=-3 -> too small, left++
+  L=2(-1) R=5(2) sum=-3 -> too small, left++
+  L=3(0) R=5(2) sum=-2 -> too small, left++
+  L=4(1) R=5(2) sum=-1 -> too small, left++
+```
+
+**6. On a hit:** record the team, move both pointers, then skip equal neighbours on both sides:
+
+```output
+captain i=1 (-1)
+  L=2(-1) R=5(2) sum=0 -> found [-1, -1, 2]
+  L=3(0) R=4(1) sum=0 -> found [-1, 0, 1]
+```
+
+<Callout kind="java">
+`List.of(a, b, c)` makes an immutable list: safe to store in the result, and `equals` compares contents, which is
+what lets the demo compare results with a `HashSet`.
+</Callout>
+
+</Explain>
+<Panel>
+
+<RunnableCode file="ThreeSum.java" />
+
+</Panel>
+</Split>
+
+<Split>
+<Explain>
+
+## Duplicates: where people lose marks
+
+Duplicates sneak in at exactly two places, and each has its own fix.
+
+1. **Two equal captains** would find the same teams twice. Skip a captain equal to the **previous** one. Comparing
+   with the **next** one instead skips the *first* -1, and the team that needed both -1s is lost.
+2. **Equal walkers after a hit** would record the same team again. After a hit, move past every equal neighbour.
+
+The runs that prove it:
+
+```output
+[0, 0, 0, 0] -> [[0, 0, 0]]
+[-2, 0, 0, 2, 2] -> [[-2, 0, 2]]
+random check: 2000 / 2000 match brute force, no duplicate triplets
+```
+
+The last line compares the fast version against brute force on 2,000 random small arrays (fixed seed, so it is the
+same every run).
+
+<Callout kind="trap">
+Do not "fix" duplicates by putting results in a `HashSet` at the end. It works, but it hides that you did not
+understand where they come from, and the interviewer's next question ("what if you cannot use extra space?") is
+exactly about that.
+</Callout>
+
+</Explain>
+<Panel>
+
+<Chalkboard title="The two duplicate guards">
+<pre>
+<Chalk color="yellow">{'// 1. captain guard: compare with the PREVIOUS one'}</Chalk>{'\nif (i > 0 && a[i] == a[i - 1]) continue;\n\n'}<Chalk color="yellow">{'// 2. after a hit: step past equal neighbours'}</Chalk>{'\nleft++; right--;\nwhile (left < right && a[left]  == a[left - 1])  left++;\nwhile (left < right && a[right] == a[right + 1]) right--;'}
+</pre>
+</Chalkboard>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Break it (predict first, then run)
+
+The editor on the right is open. Change one thing, say what you expect, then press **Run**:
+
+1. Delete `Arrays.sort(a);`. Which line of the output changes first, and why does the random check now fail?
+2. Change the captain guard to compare `a[i]` with `a[i + 1]`. Which team from the example disappears?
+3. Remove the two `while` loops after a hit. What does `[-2, 0, 0, 2, 2]` return now?
+4. Remove `if (a[i] > 0) break;`. Is the result still correct? What did that line buy you?
+
+</Explain>
+<Panel>
+
+<RunnableCode file="ThreeSum.java" title="Your sandbox: ThreeSum.java" startEditing />
+
+</Panel>
+</Split>
+
+<CheatCard title="Cheat card: 3Sum">
+
+- Sort (a copy), loop captains `i` up to `length - 2`, stop when `a[i] > 0`.
+- For each captain: `left = i + 1`, `right = end`; sum too small → `left++`, too big → `right--`.
+- Duplicates: skip `a[i] == a[i - 1]` (previous, not next); after a hit, skip equal neighbours on both sides.
+- O(n²) time, O(1) extra besides the sort. Brute force is O(n³).
+- It is Two Sum II per captain. 4Sum is 3Sum per first number: O(n³).
+
+</CheatCard>
+
+Next up: **Container With Most Water**, the same two walkers, but now the rule for which one moves is about the
+shorter wall.
