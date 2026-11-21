@@ -1,48 +1,51 @@
 import { Link } from 'react-router';
 import { useSeriesList } from '@/entities/chapter/hooks';
 import { WarmupDeck } from '@/features/flashcards/WarmupDeck';
-import { Actor, Scene } from '@/shared/kit';
-import { Badge, ErrorNote, Spinner } from '@/shared/ui';
-
-const upcoming = ['LLD', 'HLD', 'Cloud'];
+import { Character } from '@/shared/kit';
+import { Badge, ErrorNote } from '@/shared/ui';
+import { curriculum, method, type Track } from './homeTour';
 
 export function HomePage() {
   const series = useSeriesList();
+  const chapters = new Map(series.data?.map((s) => [s.id, s.chapterCount]));
+
   return (
     <div className="home">
-      <section className="home-hero">
-        <h1>
-          Craft your stack, <span className="home-hero__hl">one internal at a time.</span>
-        </h1>
-        <p>Cartoon intuition first, exact internals second, then you prove it: predict the output, run the real JVM, answer like it is the interview.</p>
-        <Scene label="Meet the cast">
-          <Actor kind="list" label="ArrayList" says="I keep everything, in order." />
-          <Actor kind="set" mood="nope" label="HashSet" says="Duplicates? Not on my list." />
-          <Actor kind="map" mood="smug" label="HashMap" says="Give me a key, I give you a value." />
-        </Scene>
+      <section className="home-hero" aria-labelledby="hero-h">
+        <p className="home-hero__eyebrow">Interview preparation for Java engineers</p>
+        <h1 id="hero-h">Understand the internals. Practise the interview.</h1>
+        <p className="home-hero__lead">
+          Stackcraft teaches Java, data structures and algorithms, and system design the way senior interviews test
+          them: how things work underneath, why they were built that way, and how to explain it clearly.
+        </p>
+        <div className="home-hero__cta">
+          <Link to="/series/java-core" className="ui-btn ui-btn--primary">
+            Start with Java Core
+          </Link>
+          <Link to="/series/dsa" className="ui-btn ui-btn--default">
+            Browse DSA patterns
+          </Link>
+        </div>
+        <ol className="home-method" aria-label="How each chapter is built">
+          {method.map((m, i) => (
+            <li key={m.title}>
+              <span className="home-method__num" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <strong>{m.title}</strong>
+              <span>{m.body}</span>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <div className="home-grid">
-        <section aria-labelledby="series-h">
-          <h2 id="series-h">Series</h2>
-          {series.isLoading && <Spinner />}
+        <section aria-labelledby="curriculum-h">
+          <h2 id="curriculum-h">What you will learn</h2>
           {series.error && <ErrorNote error={series.error} />}
-          <div className="home-series">
-            {series.data?.map((s) => (
-              <Link key={s.id} to={`/series/${s.id}`} className="ui-card home-series__card">
-                <h3>{s.title}</h3>
-                <p>{s.tagline}</p>
-                <div className="qz-row">
-                  <Badge tone="mint">{s.unitCount} unit{s.unitCount === 1 ? '' : 's'}</Badge>
-                  <Badge tone="lavender">{s.chapterCount} chapter{s.chapterCount === 1 ? '' : 's'}</Badge>
-                </div>
-              </Link>
-            ))}
-            {upcoming.map((u) => (
-              <div key={u} className="ui-card home-series__card is-soon" aria-disabled="true">
-                <h3>{u}</h3>
-                <p>Coming soon.</p>
-              </div>
+          <div className="home-tracks">
+            {curriculum.map((t) => (
+              <TrackCard key={t.title} track={t} chapterCount={t.seriesId ? chapters.get(t.seriesId) : undefined} />
             ))}
           </div>
         </section>
@@ -52,5 +55,36 @@ export function HomePage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+function TrackCard({ track, chapterCount }: { track: Track; chapterCount?: number }) {
+  const body = (
+    <>
+      <div className="home-track__head">
+        <Character kind={track.kind} size={48} />
+        <div>
+          <h3>{track.title}</h3>
+          {track.seriesId ? (
+            <Badge tone="mint">{chapterCount === undefined ? 'Available' : `${chapterCount} chapter${chapterCount === 1 ? '' : 's'}`}</Badge>
+          ) : (
+            <Badge tone="lavender">Coming soon</Badge>
+          )}
+        </div>
+      </div>
+      <p>{track.summary}</p>
+      <ul>
+        {track.topics.map((topic) => (
+          <li key={topic}>{topic}</li>
+        ))}
+      </ul>
+    </>
+  );
+  return track.seriesId ? (
+    <Link to={`/series/${track.seriesId}`} className="ui-card home-track" aria-label={`${track.title} series`}>
+      {body}
+    </Link>
+  ) : (
+    <div className="ui-card home-track is-soon">{body}</div>
   );
 }
