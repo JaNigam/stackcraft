@@ -1,0 +1,14 @@
+id: dsa.u01.l03
+lesson: 3
+title: Trapping Rain Water
+subtitle: Water above a bar is set by the lower of the tallest walls on each side
+minutes: 35
+completionXp: 10
+whereAsked:
+  - Blind 75 neighbour (Hard), LeetCode 42
+  - Reported in Goldman Sachs CoderPad rounds (candidate write-ups)
+  - Asked as the hard follow-up to Container With Most Water
+prerequisites:
+  - dsa.u01.l02
+codeFiles:
+  - TrappingRainWater.java
