@@ -1,0 +1,13 @@
+# Caddy is the front door: TLS, then everything goes to the web container (which forwards /api to the api).
+# SITE_ADDRESS is a hostname such as stackcraft.example.com, or 34-1-2-3.sslip.io when you have no domain.
+# Caddy obtains and renews the certificate itself (ports 80 and 443 must be reachable).
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	reverse_proxy web:80
+}

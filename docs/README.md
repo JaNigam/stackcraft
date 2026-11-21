@@ -11,6 +11,7 @@ Start here, then go as deep as you need.
 | [Style guide](STYLE-GUIDE.md) | You are drawing a diagram or building a widget |
 | [API contract](api/openapi.yaml) | You are changing anything between web and api |
 | [Decisions (ADRs)](adr/) | You want to know *why* something is the way it is |
+| [Deploying to GCP](cloud/gcp-deployment.md) | You are following the step-by-step cloud deployment path |
 
 ## Architecture chapters
 
