@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Character, Playground, type Mood } from '@/shared/kit';
 import { Button } from '@/shared/ui';
 import { bruteForceChecks, explain, threeSumFrames, traceLine, type Frame } from './threeSumFrames';
+import { StepperNav, parseIntList, useStepper } from './stepper';
 
 const PRESETS: { label: string; nums: number[] }[] = [
   { label: 'The example', nums: [-1, 0, 1, 2, -1, -4] },
@@ -15,10 +16,7 @@ const MAX = 12;
 
 /** "-1, 0, 1, 2" -> numbers; null if anything is not a small integer. */
 export function parseNumbers(text: string): number[] | null {
-  const parts = text.split(/[\s,]+/).filter(Boolean);
-  if (parts.length > MAX) return null;
-  const nums = parts.map(Number);
-  return nums.every((n) => Number.isInteger(n) && Math.abs(n) <= 99) ? nums : null;
+  return parseIntList(text, { min: -99, max: 99, maxLen: MAX });
 }
 
 const moodFor: Record<Frame['kind'], Mood> = {
@@ -60,28 +58,15 @@ export function ThreeSumPlayground({ initial = [-1, 0, 1, 2, -1, -4] }: { initia
   const [nums, setNums] = useState(initial);
   const [draft, setDraft] = useState(initial.join(', '));
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState(0);
-  const [playing, setPlaying] = useState(false);
   const frames = useMemo(() => threeSumFrames(nums), [nums]);
-  const f = frames[Math.min(step, frames.length - 1)];
-  const last = frames.length - 1;
-
-  useEffect(() => {
-    if (!playing) return;
-    if (step >= last) {
-      setPlaying(false);
-      return;
-    }
-    const t = setTimeout(() => setStep((s) => s + 1), 900);
-    return () => clearTimeout(t);
-  }, [playing, step, last]);
+  const stepper = useStepper(frames.length, nums);
+  const step = stepper.step;
+  const f = frames[step];
 
   const load = (next: number[]) => {
     setNums(next);
     setDraft(next.join(', '));
     setError(null);
-    setStep(0);
-    setPlaying(false);
   };
 
   const submit = (e: FormEvent) => {
@@ -165,18 +150,7 @@ export function ThreeSumPlayground({ initial = [-1, 0, 1, 2, -1, -4] }: { initia
           Sum checks: <strong>{f.checks}</strong> · brute force would try <strong>{bruteForceChecks(f.sorted.length)}</strong> triples
         </div>
       </div>
-      <div className="qz-row ts-nav">
-        <Button onClick={() => { setPlaying(false); setStep(0); }} disabled={step === 0}>
-          Reset
-        </Button>
-        <Button onClick={() => { setPlaying(false); setStep((s) => Math.max(0, s - 1)); }} disabled={step === 0}>
-          Back
-        </Button>
-        <Button variant="primary" onClick={() => { setPlaying(false); setStep((s) => Math.min(last, s + 1)); }} disabled={step >= last}>
-          Next
-        </Button>
-        <Button onClick={() => (step >= last ? (setStep(0), setPlaying(true)) : setPlaying((p) => !p))}>{playing ? 'Pause' : 'Play'}</Button>
-      </div>
+      <StepperNav stepper={stepper} />
     </Playground>
   );
 }

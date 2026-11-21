@@ -1,0 +1,214 @@
+{/* DSA 1.3 theory. Numbers are quoted from code/TrappingRainWater.out (verify-content re-runs it), or computed by the
+    playground's frame generator, which is tested line by line against that same trace. */}
+
+<Split ratio="wide-text">
+<Explain>
+
+<Hook>
+"Given bar heights, how much rain water is trapped after it rains?" It is a Hard, it shows up in Goldman Sachs CoderPad
+write-ups, and it is usually the follow-up to Container With Most Water. The trap is to treat it like Container: here
+**every bar in between matters**, and the answer is a sum over all columns, not one best pair.
+</Hook>
+
+## The picture: one column at a time
+
+Stand on one column and look left and right. Water above you can rise until it would spill over the **lower** of the
+two tallest walls around you, one on each side. So for every column `i`:
+
+**water[i] = min(tallest bar on the left, tallest bar on the right) - height[i]**
+
+(The "tallest on the left" includes the column itself, so the result is never negative.) The answer is the sum over all
+columns. Everything else in this chapter is about computing those two maxima cheaply.
+
+</Explain>
+<Panel>
+
+<Scene label="Standing on a column">
+  <Actor kind="blob" mood="surprised" label="Column" says="Water above me stops at the lower of my two tallest neighbours." />
+  <Actor kind="list" mood="smug" label="leftMax" says="I am the tallest wall to its left." />
+  <Actor kind="queue" mood="smug" label="rightMax" says="I am the tallest wall to its right." />
+</Scene>
+
+</Panel>
+</Split>
+
+<Split>
+<Explain>
+
+## Step 1: write the two maxima down (O(n) time, O(n) space)
+
+Brute force scans both sides for every column: O(n²). Instead, sweep once from the left keeping the running maximum,
+once from the right, then combine. For the example `[0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]` the real arrays are on the
+board, and the water adds up to **6**.
+
+This version is worth saying first in an interview: it is correct, easy to explain, and O(n). Then you improve the
+space.
+
+</Explain>
+<Panel>
+
+<Chalkboard title="Prefix maxima, from the real run">
+<pre>
+{'height   [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\nleftMax  [0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3]\nrightMax [3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 1]\n'}<Chalk color="yellow">{'water    [0, 0, 1, 0, 1, 2, 1, 0, 0, 1, 0, 0]'}</Chalk>{'\n\nwater[i] = min(leftMax[i], rightMax[i]) - height[i]\n'}<Chalk color="mint">{'total 6'}</Chalk>
+</pre>
+</Chalkboard>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Step 2: two pointers, no arrays (O(n) time, O(1) space)
+
+You don't need both full arrays. Keep `leftMax` and `rightMax` as you walk inward from both ends, and each step
+**settle the side whose bar is lower**:
+
+- If `height[left] < height[right]`, the right side already has a wall at least as tall as `height[left]`. So for
+  the left column, the *left* maximum is the one that decides its water: `leftMax - height[left]` (or a new
+  `leftMax` and no water). Then `left++`.
+- Otherwise do the same on the right with `rightMax`, then `right--`.
+
+It is the Container idea again: the lower side is the one you can decide about now. Press **Next** and watch each
+column fill.
+
+</Explain>
+<Panel>
+
+<RainWaterPlayground />
+
+</Panel>
+</Split>
+
+<Split>
+<Explain>
+
+## Why settling the lower side is safe
+
+Say `height[left] < height[right]`. The water above `left` is `min(trueLeftMax, trueRightMax) - height[left]`.
+
+- `trueLeftMax` is exactly our `leftMax`: we have seen everything to the left.
+- `trueRightMax` is at least `leftMax`. If `leftMax` is the current bar, the right pointer stands on a taller one. If
+  `leftMax` came from a bar we walked past earlier, we only walked past it because the right pointer stood on a
+  **taller** bar at that moment, and that bar is still on the right side: either still under the right pointer, or
+  already counted in `rightMax`.
+
+So `min(trueLeftMax, trueRightMax)` is `leftMax`, and the left column can be settled without knowing the true right
+maximum. The same holds on the right. Each step settles one column, so at most n steps.
+
+</Explain>
+<Panel>
+
+| Version | Time | Extra space | Say it when |
+|---|---|---|---|
+| Brute force (scan both sides per column) | O(n²) | O(1) | first sentence only |
+| Prefix maxima arrays | O(n) | O(n) | your first full answer |
+| **Two pointers** | **O(n)** | **O(1)** | the optimisation they want |
+
+<Callout kind="interview">
+"Water over each bar is the lower of the tallest bars on each side, minus the bar. Prefix maxima give that in O(n)
+time and O(n) space. With two pointers I settle whichever side is lower, because the other side already has a wall at
+least that tall, so it's O(n) time and O(1) space."
+</Callout>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Run it: three versions, one answer
+
+The program has all three versions. The two-pointer trace for the example, from the real run, starts like this:
+
+```output
+  L=0(0) new leftMax=0 -> no water, left++
+  R=11(1) new rightMax=1 -> no water, right--
+  L=1(1) new leftMax=1 -> no water, left++
+  L=2(0) leftMax=1 -> water 1, total=1, left++
+```
+
+and ends at the tallest bar with the same 6:
+
+```output
+  L=6(1) leftMax=2 -> water 1, total=6, left++
+result 6
+```
+
+More inputs from the same run:
+
+```output
+[4, 2, 0, 3, 2, 5] -> 9
+[3, 0, 2, 0, 4] -> 7
+[1, 2, 3, 4] -> 0
+[5, 0, 5] -> 5
+random check: 5000 / 5000, all three versions agree
+```
+
+A staircase holds nothing (no wall on the high side), and a single dip between two 5s holds exactly 5.
+
+</Explain>
+<Panel>
+
+<RunnableCode file="TrappingRainWater.java" />
+
+</Panel>
+</Split>
+
+<Split>
+<Explain>
+
+## The trap: thinking it is Container With Most Water
+
+Container only uses the two chosen walls. Here, bars in the middle can hold water **higher than the end walls**.
+Using just the two end walls as the level is wrong, even though it sometimes gives the right number by luck:
+on `[1, 0, 4, 0, 4, 0, 1]` it returns 3, while the real answer is 6 (the pool between the two 4s is 4 deep).
+
+<Callout kind="trap">
+Two pointers is not "the Container code with a sum". The pointer rule compares **bar heights** to pick the side, but
+the water uses that side's **running max**. Mixing those up (or updating the max after adding water) gives wrong,
+sometimes negative, totals.
+</Callout>
+
+</Explain>
+<Panel>
+
+<Chalkboard title="Container vs Rain Water">
+<pre>
+<Chalk color="yellow">{'Container With Most Water'}</Chalk>{'\n  one pair (l, r); walls between are ignored\n  answer = max over pairs of min(h[l], h[r]) * (r - l)\n\n'}<Chalk color="yellow">{'Trapping Rain Water'}</Chalk>{'\n  every column; walls between are what holds water\n  answer = sum over i of min(leftMax[i], rightMax[i]) - h[i]\n\n'}<Chalk color="mint">{'shared idea: the lower side is the one you can decide now'}</Chalk>
+</pre>
+</Chalkboard>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Break it (predict first, then run)
+
+1. In `twoPointers`, update `leftMax` **after** adding `leftMax - h[left]` (and drop the `>=` branch). What does the example return?
+2. Change `if (h[left] < h[right])` to `if (leftMax < rightMax)`. Is it still correct? Why?
+3. In `prefixMax`, compute `water[i]` with `Math.max` instead of `Math.min`. What happens on `[5, 0, 1]`?
+4. Delete the brute force and the random check. What would you lose if you later broke the two-pointer version?
+
+</Explain>
+<Panel>
+
+<RunnableCode file="TrappingRainWater.java" title="Your sandbox: TrappingRainWater.java" startEditing />
+
+</Panel>
+</Split>
+
+<CheatCard title="Cheat card: Trapping Rain Water">
+
+- water[i] = min(max height to the left including i, max to the right including i) - h[i]; sum over i.
+- Prefix maxima: two sweeps + one combine. O(n) time, O(n) space.
+- Two pointers: settle the side with the lower bar using that side's running max. O(n) time, O(1) space.
+- Why safe: the other side already has a wall at least as tall as this side's max.
+- Not Container: every bar matters, the answer is a sum, the pool can be deeper than the end walls.
+
+</CheatCard>
+
+That finishes the two-pointer unit. Next unit: **sliding window**, starting with Longest Repeating Character
+Replacement.

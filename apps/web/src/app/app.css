@@ -1832,3 +1832,98 @@ a.home-track:hover {
   font-variant-ligatures: none;
   font-feature-settings: 'liga' 0, 'calt' 0;
 }
+
+/* ---------- Walls and water (Bars) ---------- */
+.wb {
+  width: 100%;
+  max-width: 560px;
+  padding-top: 1rem;
+}
+
+.wb__plot {
+  position: relative;
+  display: grid;
+  align-items: end;
+  height: 190px;
+  gap: 4px;
+  border-bottom: var(--stroke) solid var(--outline);
+}
+
+.wb__col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+}
+
+.wb__bar {
+  width: 100%;
+  min-height: 0;
+  background: var(--lavender);
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.wb__water {
+  width: 100%;
+  background: color-mix(in srgb, var(--sky) 75%, #4aa3df);
+  border: 2px solid #2f7fb5;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  opacity: 0.9;
+}
+
+.wb__col.is-left .wb__bar { background: var(--pink); }
+.wb__col.is-right .wb__bar { background: var(--sky); }
+.wb__col.is-settled .wb__bar { opacity: 0.55; }
+
+/* Container: thin walls, one water rectangle between the two chosen walls */
+.wb--thin .wb__bar {
+  width: 30%;
+  min-width: 6px;
+  border-radius: 3px 3px 0 0;
+}
+
+.wb__container {
+  position: absolute;
+  bottom: 0;
+  background: color-mix(in srgb, var(--sky) 55%, transparent);
+  border: 2px dashed #2f7fb5;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  transition: left 0.25s ease, width 0.25s ease, height 0.25s ease;
+  pointer-events: none;
+}
+
+.wb__tag {
+  top: -1.2rem;
+}
+
+.wb__axis {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  font-family: var(--font-mono);
+  margin-top: 0.25rem;
+}
+
+.wb__axis b {
+  display: block;
+  font-size: 0.8rem;
+}
+
+.wb__axis small {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb__container {
+    transition: none;
+  }
+}

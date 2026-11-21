@@ -1,0 +1,215 @@
+# Question bank. Every `predict` program is compiled and run by scripts/verify-content.mjs and must print `expected`.
+questions:
+  # ---------- Warm-up ----------
+  - id: w1
+    tier: warmup
+    type: mcq
+    prompt: What is the area of the container between walls i and j?
+    options:
+      - "max(height[i], height[j]) * (j - i)"
+      - "min(height[i], height[j]) * (j - i)"
+      - "(height[i] + height[j]) * (j - i) / 2"
+      - "min(height[i], height[j]) * (j - i + 1)"
+    answer: 1
+    explanation: The water spills over the shorter wall, so the level is the minimum, and the width is the distance j - i.
+
+  - id: w2
+    tier: warmup
+    type: mcq
+    prompt: Where do the two pointers start, and why?
+    options:
+      - "Both at index 0, to scan left to right"
+      - "At the two ends: the widest container, so every later one is narrower"
+      - "In the middle, expanding outward"
+      - "At the two tallest walls"
+    answer: 1
+    explanation: Starting widest means each step trades width for a chance at a taller level, which is what makes discarding a wall safe.
+
+  - id: w3
+    tier: warmup
+    type: mcq
+    prompt: What is the time complexity of the two-pointer solution?
+    options: ["O(n log n)", "O(n)", "O(n²)", "O(1)"]
+    answer: 1
+    explanation: Every step discards one wall for good, so there are at most n - 1 steps, each O(1).
+
+  - id: w4
+    tier: warmup
+    type: mcq
+    prompt: The two walls are equal in height. Which pointer may move?
+    options: ["Only left", "Only right", "Either one", "Neither: return immediately"]
+    answer: 2
+    explanation: With equal walls, any narrower container using either of them is capped at the same level, so either can be discarded. The standard code moves right.
+
+  - id: w5
+    tier: warmup
+    type: mcq
+    prompt: Why must best = Math.max(best, area) run before the pointer moves?
+    options:
+      - "It doesn't matter where it runs"
+      - "Otherwise the container just measured is never recorded"
+      - "To avoid integer overflow"
+      - "Because Math.max is slow"
+    answer: 1
+    explanation: The current container is the one we are about to give up on; if it is the best one, recording it later is too late.
+
+  # ---------- Interview ----------
+  - id: i1
+    tier: interview
+    type: predict
+    prompt: This version moves the TALLER wall. What does it print?
+    code: |
+      public class MoveTaller {
+          public static void main(String[] args) {
+              int[] height = {1, 8, 6, 2, 5, 4, 8, 3, 7};
+              int left = 0, right = height.length - 1, best = 0;
+              while (left < right) {
+                  best = Math.max(best, Math.min(height[left], height[right]) * (right - left));
+                  if (height[left] > height[right]) left++; // bug: moves the TALLER wall
+                  else right--;
+              }
+              System.out.println(best);
+          }
+      }
+    expected: |
+      8
+    explanation: The short wall of height 1 is never discarded, so every container is capped at level 1. The first one (width 8) is the biggest it ever sees.
+
+  - id: i2
+    tier: interview
+    type: predict
+    prompt: Three small inputs. What are the three lines?
+    code: |
+      public class SmallCases {
+          static int maxArea(int[] height) {
+              int left = 0, right = height.length - 1, best = 0;
+              while (left < right) {
+                  best = Math.max(best, Math.min(height[left], height[right]) * (right - left));
+                  if (height[left] < height[right]) left++;
+                  else right--;
+              }
+              return best;
+          }
+
+          public static void main(String[] args) {
+              System.out.println(maxArea(new int[]{2, 2, 2}));
+              System.out.println(maxArea(new int[]{1, 2, 4, 3}));
+              System.out.println(maxArea(new int[]{9}));
+          }
+      }
+    expected: |
+      4
+      4
+      0
+    explanation: "[2,2,2]: the end walls, level 2, width 2. [1,2,4,3]: walls 2 and 3 at indices 1 and 3, level 2, width 2. One wall: the loop never runs, 0."
+
+  - id: i3
+    tier: interview
+    type: short
+    prompt: "The interviewer says: your solution looks like a trick. Prove that moving the shorter wall never skips the best container."
+    modelAnswer: |
+      Say the left wall is the shorter one. Every container we haven't measured that still uses this left wall pairs
+      it with some wall to the left of `right`. That container is narrower, and its level is at most the left wall's
+      height, because the left wall is the short side either way. Narrower and no taller means its area is at most
+      what we just measured, so the left wall can't be part of anything better. Discarding it loses nothing. By the
+      same argument for the right side (and either side on a tie), every step is safe, and since each step removes
+      one wall, we finish in O(n).
+    keyPoints:
+      - Fix the shorter wall and look at all unmeasured containers using it
+      - They are narrower and no taller, so no bigger
+      - Therefore discarding it is safe; ties allow either
+      - One wall removed per step, so O(n)
+
+  - id: i4
+    tier: interview
+    type: short
+    prompt: Give the brute force, its cost, and tell the interviewer why you would still write it.
+    modelAnswer: |
+      Try every pair `i < j`, compute `min(h[i], h[j]) * (j - i)`, keep the max: O(n²) time, O(1) space. It is too
+      slow for 100,000 walls, but it is obviously correct, so I'd use it as a referee in tests: compare the O(n)
+      version against it on thousands of small random arrays. That catches off-by-one and tie-handling mistakes that a
+      few hand-picked cases miss.
+    keyPoints:
+      - O(n²) over all pairs
+      - Correct by inspection
+      - Use it as a test oracle on random inputs
+
+  - id: i5
+    tier: interview
+    type: short
+    prompt: When could the area overflow an int, and what would you change?
+    modelAnswer: |
+      The area is height × width. With LeetCode's limits (heights up to 10^4, up to 10^5 walls) the maximum is about
+      10^9, which fits in an int (max about 2.1 × 10^9). If heights or counts could be larger, the product can exceed
+      the int range, so I'd compute it as `(long) h * width` and keep `best` as a long. Mentioning the limit check
+      shows I read the constraints, not just the example.
+    keyPoints:
+      - Max area is about 10^9 under the stated limits, so int is fine
+      - "Larger limits need long arithmetic: cast before multiplying"
+      - Read the constraints
+
+  # ---------- Killer ----------
+  - id: k1
+    tier: killer
+    type: problem
+    prompt: "Return not just the best area but the indices of the two walls. Then the interviewer adds: if several pairs tie, return any one of them. Is your answer always a correct pair, and what does the algorithm NOT promise?"
+    hints:
+      - Track the pair whenever best improves, not just the area.
+      - The exchange argument proves you never miss the best area. Does it prove you visit every pair that achieves it?
+      - If a stricter tie rule were added (say "smallest left index"), how would you make sure?
+    modelAnswer: |
+      Keep `bestL, bestR` and update them whenever `area > best`. That pair is always correct: it is a real pair and
+      its area is the maximum, because the exchange argument shows no discarded wall could have done better. What the
+      algorithm does **not** promise is that it visits every pair with the maximum area: it skips pairs it has proven
+      can't be *better*, and a skipped pair could still *tie*. So "return any one" is fine, but a stricter rule such
+      as "the smallest left index" is not guaranteed by this code. For that, check against brute force on random
+      inputs, or adapt the rule and prove it. Saying this shows you know exactly what your proof covers.
+
+  - id: k2
+    tier: killer
+    type: problem
+    prompt: "The walls now have a thickness: wall i occupies width w[i], and the water width between i and j is the sum of w over the walls strictly between them. Does the two-pointer argument still work?"
+    hints:
+      - What made the argument work? Moving inward always made the container narrower.
+      - With positive thicknesses, is the width between i and j still decreasing as j moves left?
+      - You need prefix sums to get each width in O(1).
+    modelAnswer: |
+      Yes, as long as every thickness is positive: the width between `left` and `right` still shrinks whenever a
+      pointer moves inward, and the level is still capped by the shorter wall, so the exchange argument holds. Use a
+      prefix sum of thicknesses to compute each width in O(1): width = prefix[right] - prefix[left + 1]. Still O(n)
+      time, now O(n) space for the prefix array (or O(1) if you keep a running width and subtract as you move).
+
+  - id: k3
+    tier: killer
+    type: problem
+    prompt: "Why does this problem need two pointers and not sorting, unlike 3Sum? Could you sort the heights first?"
+    hints:
+      - What does the area depend on besides the heights?
+      - What happens to the positions when you sort?
+      - In 3Sum the answer was values; here it depends on indices.
+    modelAnswer: |
+      The area depends on the distance between the walls, which is about their positions. Sorting throws positions
+      away, so it destroys the width. In 3Sum the answer was a set of values, so reordering was harmless. Here the
+      input order is the information, and two pointers work directly on it because "moving inward makes it narrower"
+      is already true without sorting. (You could sort index-height pairs for a different O(n log n) approach, but it
+      is more complex and slower.)
+
+flashcards:
+  - id: f1
+    front: Container With Most Water area formula?
+    back: min(h[left], h[right]) × (right - left).
+  - id: f2
+    front: Which wall moves, and why is it safe?
+    back: The shorter one. Every unmeasured container using it is narrower and no taller, so it can't win.
+  - id: f3
+    front: Complexity of the two-pointer solution?
+    back: O(n) time (one wall discarded per step), O(1) space.
+  - id: f4
+    front: What goes wrong if you move the taller wall?
+    back: The short wall stays forever and caps every container; on the example you get 8 instead of 49.
+  - id: f5
+    front: Do the walls in between matter?
+    back: No, only the two chosen walls. If they did, it would be Trapping Rain Water.
+  - id: f6
+    front: Why record best before moving the pointer?
+    back: The container you just measured is the one you are giving up; record it or lose it.

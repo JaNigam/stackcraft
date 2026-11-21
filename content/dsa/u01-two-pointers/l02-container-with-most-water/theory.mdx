@@ -1,0 +1,202 @@
+{/* DSA 1.2 theory. Numbers are quoted from code/ContainerWithMostWater.out (verify-content re-runs it), or computed by
+    the playground's frame generator, which is tested line by line against that same trace. */}
+
+<Split ratio="wide-text">
+<Explain>
+
+<Hook>
+"Given wall heights, pick two walls that hold the most water." Brute force over all pairs is the obvious answer. The
+interviewer wants the O(n) version, and then asks the question that matters: **why is it safe to throw a wall away?**
+If you can say that in one sentence, you pass.
+</Hook>
+
+## The picture: two people holding a tarp
+
+Two people hold a tarp between them to carry water. The water can only rise as high as the **lower** person's hands,
+because it spills over the low side. And the further apart they stand, the more the tarp holds. So:
+
+**area = (the shorter wall) × (the distance between the walls)**
+
+Start them at the two ends, the widest the tarp can ever be. Now one of them has to step in. Which one?
+
+**The shorter one.** If the taller one steps in, the tarp is still capped by the same short person, and it just got
+narrower. That can never help. Moving the short one is the only move that might find a taller partner.
+
+</Explain>
+<Panel>
+
+<Scene label="Holding the tarp">
+  <Actor kind="list" mood="sad" label="Short wall" says="The water spills over my side. I set the level." />
+  <Actor kind="queue" mood="smug" label="Tall wall" says="Moving me can only make the tarp narrower. Move the short one." />
+</Scene>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Watch it run
+
+Press **Next**. Each step measures one container (the dashed water box), records the best, then throws away the
+shorter wall.
+
+On the example `[1, 8, 6, 2, 5, 4, 8, 3, 7]` the best, **49**, turns up at the second container measured (walls 1
+and 8, level 7, width 7), and nothing after it beats it. The whole run measures **8** containers, where brute force
+would measure all **36** pairs.
+
+Then try **Trap for "always move left"**: a strategy that ignores which wall is shorter misses the best pair.
+
+</Explain>
+<Panel>
+
+<ContainerPlayground />
+
+</Panel>
+</Split>
+
+<Split>
+<Explain>
+
+## Why throwing the shorter wall away is safe
+
+This is the answer to say out loud. Suppose the **left** wall is the shorter one. Every container we have not measured
+yet that still uses this left wall pairs it with some wall `r'` **to the left of** `right`. Such a container is:
+
+- **narrower**, because `r'` is closer;
+- **no taller**, because the level is at most the left wall, which is the short side anyway.
+
+Narrower and no taller means smaller or equal. So no unmeasured container using this left wall can beat the one we
+just measured. The left wall is finished: `left++`. The same argument works for the right wall, and with a tie
+either wall can go.
+
+Every step removes one wall for good, so there are at most n steps: **O(n) time, O(1) space**.
+
+</Explain>
+<Panel>
+
+<Chalkboard title="The exchange argument">
+<pre>
+{'height[left] <= height[right]  (left is shorter)\n\nany unmeasured container (left, r2), r2 < right:\n  width : r2 - left     '}<Chalk color="pink">{'<'}</Chalk>{'  right - left\n  level : min(h[left], h[r2])  '}<Chalk color="pink">{'<='}</Chalk>{'  h[left]\n  area  '}<Chalk color="pink">{'<='}</Chalk>{'  h[left] * (right - left)   = what we measured\n\n'}<Chalk color="yellow">{'=> nothing left to win with this wall: left++'}</Chalk>
+</pre>
+</Chalkboard>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Run it: the code, piece by piece
+
+**1. Start widest:** `left = 0`, `right = length - 1`, `best = 0`.
+
+**2. Measure:** the level is `Math.min(height[left], height[right])`, the width is `right - left`.
+
+**3. Record before moving:** `best = Math.max(best, area)`, so the container you just measured is never lost.
+
+**4. Discard the shorter wall:** `if (height[left] < height[right]) left++; else right--;`. On a tie, `else` moves
+`right`, which the argument above allows.
+
+The real trace of the first steps:
+
+```output
+  L=0(1) R=8(7) level=1 width=8 area=8 best=8 -> left++ (left is shorter)
+  L=1(8) R=8(7) level=7 width=7 area=49 best=49 -> right-- (right is shorter)
+  L=1(8) R=7(3) level=3 width=6 area=18 best=49 -> right-- (right is shorter)
+  L=1(8) R=6(8) level=8 width=5 area=40 best=49 -> right-- (tie)
+```
+
+Small inputs, from the same run:
+
+```output
+[1, 1] -> 1
+[4, 3, 2, 1, 4] -> 16
+[7] -> 0
+[] -> 0
+```
+
+Fewer than two walls gives 0 because the loop never runs.
+
+<Callout kind="java">
+`h * (right - left)` is an `int` multiplication. With LeetCode's limits (100,000 walls up to 10,000 tall) the
+biggest area is about 10⁹, which still fits in an `int` (max about 2.1 × 10⁹). With bigger limits you would need
+`long`. Saying this unprompted is a cheap senior signal.
+</Callout>
+
+</Explain>
+<Panel>
+
+<RunnableCode file="ContainerWithMostWater.java" />
+
+</Panel>
+</Split>
+
+<Split>
+<Explain>
+
+## The trap: "just move one pointer every time"
+
+People who memorised "two pointers, move inward" without the reason often write `left++` every step. The demo has
+that wrong version too:
+
+```output
+always moving left on [5, 1, 1, 1, 1, 9, 4] -> 24 (correct 25)
+```
+
+The best pair is walls 0 and 5 (heights 5 and 9: level 5, width 5, area 25). Always moving left drops the 5 on
+the very first step, while the right wall is still the short 4. After that no container can reach 25.
+
+And the referee line, comparing with brute force over every pair:
+
+```output
+random check: 5000 / 5000 match brute force
+```
+
+</Explain>
+<Panel>
+
+| Approach | Time | Space | Note |
+|---|---|---|---|
+| All pairs | O(n²) | O(1) | easy to get right: the referee |
+| **Two pointers, move the shorter** | **O(n)** | O(1) | needs the exchange argument |
+| Two pointers, move either | O(n) | O(1) | **wrong**: can discard the best wall |
+
+<Callout kind="interview">
+"Start with the widest pair. The area is capped by the shorter wall, so every narrower container using that wall is
+no better. That wall is done, so I move it inward. Each step discards one wall: O(n) time, O(1) space."
+</Callout>
+
+</Panel>
+</Split>
+
+<Split ratio="wide-panel">
+<Explain>
+
+## Break it (predict first, then run)
+
+1. Swap the comparison so the **taller** wall moves. What does the example return now?
+2. Move `best = Math.max(best, area)` to *after* the pointer move. Which container is lost?
+3. Change `while (left < right)` to `while (left <= right)`. What area does the last iteration add, and does the answer change?
+4. Make the heights `long` and multiply two of the biggest values. When would an `int` overflow here?
+
+</Explain>
+<Panel>
+
+<RunnableCode file="ContainerWithMostWater.java" title="Your sandbox: ContainerWithMostWater.java" startEditing />
+
+</Panel>
+</Split>
+
+<CheatCard title="Cheat card: Container With Most Water">
+
+- area = min(h[left], h[right]) × (right - left). Start at both ends, the widest container.
+- Record `best` first, then move the **shorter** wall inward (tie: either).
+- Why safe: every unmeasured container using the shorter wall is narrower and no taller.
+- O(n) time, O(1) space. Brute force over pairs is O(n²).
+- Only the two chosen walls matter; walls in between do not block anything. (That changes in Trapping Rain Water.)
+
+</CheatCard>
+
+Next up: **Trapping Rain Water**, where every bar in between *does* matter, and the same "settle the shorter side"
+idea gives an O(n), O(1) answer to a Hard.

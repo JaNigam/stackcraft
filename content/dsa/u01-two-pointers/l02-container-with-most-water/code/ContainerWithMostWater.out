@@ -1,0 +1,19 @@
+== trace for [1, 8, 6, 2, 5, 4, 8, 3, 7]
+  L=0(1) R=8(7) level=1 width=8 area=8 best=8 -> left++ (left is shorter)
+  L=1(8) R=8(7) level=7 width=7 area=49 best=49 -> right-- (right is shorter)
+  L=1(8) R=7(3) level=3 width=6 area=18 best=49 -> right-- (right is shorter)
+  L=1(8) R=6(8) level=8 width=5 area=40 best=49 -> right-- (tie)
+  L=1(8) R=5(4) level=4 width=4 area=16 best=49 -> right-- (right is shorter)
+  L=1(8) R=4(5) level=5 width=3 area=15 best=49 -> right-- (right is shorter)
+  L=1(8) R=3(2) level=2 width=2 area=4 best=49 -> right-- (right is shorter)
+  L=1(8) R=2(6) level=6 width=1 area=6 best=49 -> right-- (right is shorter)
+result 49
+== more inputs
+[1, 1] -> 1
+[4, 3, 2, 1, 4] -> 16
+[2, 2, 2] -> 4
+[1, 2, 4, 3] -> 4
+[7] -> 0
+[] -> 0
+always moving left on [5, 1, 1, 1, 1, 9, 4] -> 24 (correct 25)
+random check: 5000 / 5000 match brute force
